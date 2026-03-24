@@ -1,0 +1,132 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Poppins', sans-serif;
+    background:#0f0f0f;
+    color:white;
+    overflow-x:hidden;
+}
+
+/* ===== HEADER ===== */
+
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 60px;
+    background:rgba(0,0,0,0.6);
+    backdrop-filter:blur(10px);
+    position:fixed;
+    width:100%;
+    z-index:1000;
+}
+
+.logo{
+    font-family:'Orbitron';
+    font-size:28px;
+    color:#ff1a1a;
+    letter-spacing:2px;
+    text-shadow:0 0 15px #e10600;
+}
+
+header a{
+    text-decoration:none;
+    margin-left:15px;
+    padding:8px 18px;
+    border-radius:8px;
+    transition:0.3s;
+    font-weight:500;
+}
+
+.btn-primary{
+    background:#e10600;
+    color:white;
+}
+
+.btn-primary:hover{
+    background:#ff1a1a;
+    box-shadow:0 0 15px #e10600;
+}
+
+.btn-outline{
+    border:1px solid #e10600;
+    color:white;
+}
+
+.btn-outline:hover{
+    background:#e10600;
+}
+
+/* ===== HERO SECTION ===== */
+
+.hero{
+    height:100vh;
+    background:url('../assets/gym-bg.jpg.png') center/cover no-repeat;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    position:relative;
+}
+
+.hero::after{
+    content:"";
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+}
+
+.hero-content{
+    position:relative;
+    z-index:2;
+    animation:fadeIn 1.5s ease;
+}
+
+.hero h1{
+    font-family:'Orbitron';
+    font-size:70px;
+    color:#ff1a1a;
+    text-shadow:0 0 20px #e10600;
+}
+
+.hero p{
+    margin-top:20px;
+    font-size:20px;
+    color:#ddd;
+}
+
+.btn-main{
+    display:inline-block;
+    margin-top:30px;
+    padding:12px 30px;
+    background:#e10600;
+    color:white;
+    border-radius:10px;
+    text-decoration:none;
+    font-size:18px;
+    transition:0.3s;
+}
+
+.btn-main:hover{
+    background:#ff1a1a;
+    box-shadow:0 0 20px #e10600;
+}
+
+/* ===== ANIMATION ===== */
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(30px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}

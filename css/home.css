@@ -1,0 +1,312 @@
+/* =================================================
+   THEME VARIABLES
+================================================= */
+:root{
+    --red-main:#ef4444;
+    --red-dark:#b91c1c;
+    --red-deep:#7f1d1d;
+
+    --blue-main:#38bdf8;
+    --blue-dark:#0ea5e9;
+    --blue-deep:#0284c7;
+
+    --dark-bg:#0f0f0f;
+    --dark-card:#1a1a1a;
+    --dark-soft:#1f1f1f;
+
+    --light-bg:#f8fafc;
+    --light-soft:#e2e8f0;
+}
+
+/* =================================================
+   BASE STYLE
+================================================= */
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:linear-gradient(135deg,var(--dark-bg),var(--dark-card));
+    color:#fff;
+    transition:0.3s ease;
+}
+
+/* =================================================
+   HEADER
+================================================= */
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
+    background:linear-gradient(90deg,#111,var(--dark-soft));
+    border-bottom:1px solid var(--red-deep);
+}
+
+.logo{
+    font-size:22px;
+    font-weight:bold;
+    letter-spacing:1px;
+    color:var(--red-main);
+}
+
+.hamburger{
+    font-size:24px;
+    cursor:pointer;
+}
+
+/* =================================================
+   DROPDOWN
+================================================= */
+.dropdown{
+    display:none;
+    position:absolute;
+    right:30px;
+    top:70px;
+    background:#1e1e1e;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 0 15px rgba(239,68,68,0.4);
+}
+
+.dropdown a{
+    display:block;
+    padding:10px 20px;
+    text-decoration:none;
+    color:white;
+    transition:0.2s;
+}
+
+.dropdown a:hover{
+    background:var(--red-deep);
+}
+
+.dropdown.show{
+    display:block;
+}
+
+/* =================================================
+   USER PANEL
+================================================= */
+.user-panel{
+    padding:20px;
+    text-align:center;
+}
+
+.level-bar,
+.progress-bar{
+    width:100%;
+    height:8px;
+    background:#333;
+    border-radius:10px;
+}
+
+.level-bar{
+    max-width:220px;
+    margin:10px auto;
+}
+
+.level-fill,
+.progress-fill{
+    height:100%;
+    border-radius:10px;
+    background:linear-gradient(90deg,var(--red-main),var(--red-dark));
+}
+
+/* =================================================
+   TITLE
+================================================= */
+.title{
+    text-align:center;
+    margin-top:20px;
+    color:#f87171;
+}
+
+/* =================================================
+   MISSION CARD
+================================================= */
+.mission-container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+    padding:20px;
+}
+
+.mission-card{
+    background:var(--dark-card);
+    padding:20px;
+    border-radius:15px;
+    border:1px solid rgba(239,68,68,0.2);
+    box-shadow:0 0 20px rgba(239,68,68,0.15);
+    transition:0.3s ease;
+}
+
+.mission-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 0 30px rgba(239,68,68,0.5);
+}
+
+.locked-card{
+    opacity:0.5;
+}
+
+/* =================================================
+   BUTTON
+================================================= */
+.btn-action{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(90deg,#dc2626,var(--red-deep));
+    color:white;
+    cursor:pointer;
+    font-weight:600;
+    letter-spacing:0.5px;
+    transition:0.3s;
+}
+
+.btn-action:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 20px rgba(239,68,68,0.6);
+}
+
+/* =================================================
+   COOLDOWN / SUCCESS
+================================================= */
+.cooldown{
+    text-align:center;
+    padding:10px;
+    background:#333;
+    border-radius:10px;
+}
+
+.success{
+    background:var(--red-main);
+    text-align:center;
+    padding:12px;
+    margin:15px auto;
+    width:300px;
+    border-radius:10px;
+    box-shadow:0 0 20px rgba(239,68,68,0.6);
+}
+
+/* =================================================
+   MODAL
+================================================= */
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(5px);
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-content{
+    background:var(--dark-card);
+    padding:30px;
+    border-radius:20px;
+    text-align:center;
+    width:320px;
+    border:1px solid rgba(239,68,68,0.3);
+    box-shadow:0 0 30px rgba(239,68,68,0.5);
+    animation:popupFade 0.3s ease;
+}
+
+.modal-buttons button{
+    margin:10px;
+    padding:10px 20px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+/* =================================================
+   MISSION DETAIL POPUP
+================================================= */
+.mission-popup-box h2{
+    color:var(--red-main);
+    margin-bottom:10px;
+}
+
+.mission-detail{
+    margin:15px 0;
+    padding:12px;
+    background:#111;
+    border-radius:10px;
+}
+
+.mission-detail span{
+    color:#f87171;
+    font-weight:bold;
+}
+
+/* =================================================
+   LIGHT MODE
+================================================= */
+.light-mode{
+    background:linear-gradient(135deg,var(--light-bg),var(--light-soft));
+    color:black;
+}
+
+.light-mode header{
+    background:linear-gradient(90deg,#ffffff,#e0f2fe);
+    border-bottom:1px solid var(--blue-main);
+}
+
+.light-mode .logo{
+    color:var(--blue-deep);
+}
+
+.light-mode .mission-card{
+    background:white;
+    border:1px solid #bae6fd;
+    box-shadow:0 5px 15px rgba(0,0,0,0.05);
+}
+
+.light-mode .mission-card:hover{
+    box-shadow:0 10px 25px rgba(14,165,233,0.3);
+}
+
+.light-mode .btn-action{
+    background:linear-gradient(90deg,var(--blue-main),var(--blue-dark));
+}
+
+.light-mode .level-fill,
+.light-mode .progress-fill{
+    background:linear-gradient(90deg,var(--blue-dark),var(--blue-main));
+}
+
+.light-mode .modal-content{
+    background:white;
+    border:1px solid #bae6fd;
+    box-shadow:0 10px 25px rgba(14,165,233,0.2);
+}
+
+.light-mode .mission-popup-box h2{
+    color:var(--blue-deep);
+}
+
+.light-mode .mission-detail{
+    background:#f1f5f9;
+}
+
+/* =================================================
+   ANIMATION
+================================================= */
+@keyframes popupFade{
+    from{
+        transform:scale(0.8);
+        opacity:0;
+    }
+    to{
+        transform:scale(1);
+        opacity:1;
+    }
+}

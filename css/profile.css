@@ -1,0 +1,151 @@
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background:#0f0f0f;
+    color:#fff;
+}
+
+header{
+    display:flex;
+    justify-content:space-between;
+    padding:20px 40px;
+    background:#000;
+}
+
+.logo{
+    font-weight:bold;
+    font-size:22px;
+    color:#ff2e2e;
+}
+
+.back{
+    color:#fff;
+    text-decoration:none;
+}
+
+.container{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:85vh;
+}
+
+.profile-card{
+    background:#1c1c1c;
+    padding:40px;
+    border-radius:20px;
+    width:350px;
+    text-align:center;
+    box-shadow:0 0 40px rgba(255,0,0,0.2);
+}
+
+.avatar{
+    width:130px;
+    height:130px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid #ff2e2e;
+    margin-bottom:15px;
+}
+
+.level{
+    margin-bottom:20px;
+    font-weight:bold;
+}
+
+input, select{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:8px;
+    border:none;
+    background:#2a2a2a;
+    color:#fff;
+}
+
+.btn{
+    width:100%;
+    padding:10px;
+    background:#ff2e2e;
+    border:none;
+    border-radius:8px;
+    color:#fff;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.btn:hover{
+    background:#ff4d4d;
+}
+
+/* Modal */
+.modal{
+    position:fixed;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    opacity:0;
+    visibility:hidden;
+    transition:0.3s;
+}
+
+.modal.show{
+    opacity:1;
+    visibility:visible;
+}
+
+.modal-box{
+    background:#1f1f1f;
+    padding:30px;
+    border-radius:15px;
+    text-align:center;
+    width:300px;
+}
+
+.modal-buttons{
+    margin-top:20px;
+    display:flex;
+    justify-content:space-between;
+}
+
+.cancel{
+    background:#444;
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    color:#fff;
+    cursor:pointer;
+}
+
+.confirm{
+    background:#ff2e2e;
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    color:#fff;
+    cursor:pointer;
+}
+
+/* Toast */
+.toast{
+    position:fixed;
+    bottom:30px;
+    right:30px;
+    background:#1abc9c;
+    padding:15px 25px;
+    border-radius:10px;
+    color:#fff;
+    opacity:0;
+    transform:translateY(20px);
+    transition:0.4s;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}

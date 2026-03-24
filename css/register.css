@@ -1,0 +1,101 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Poppins', sans-serif;
+    background:linear-gradient(135deg,#0f0f0f,#1a1a1a);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    color:white;
+}
+
+/* Card */
+.card{
+    background:#1a1a1a;
+    padding:40px;
+    border-radius:15px;
+    width:380px;
+    box-shadow:0 0 25px rgba(255,0,0,0.3);
+    border:1px solid #e10600;
+    text-align:center;
+}
+
+.card h2{
+    font-family:'Orbitron';
+    margin-bottom:25px;
+    color:#ff1a1a;
+    text-shadow:0 0 10px #e10600;
+}
+
+/* Inputs */
+.card input[type="text"],
+.card input[type="email"],
+.card input[type="password"]{
+    width:100%;
+    padding:12px;
+    margin-bottom:15px;
+    border-radius:8px;
+    border:1px solid #333;
+    background:#0f0f0f;
+    color:white;
+    font-size:14px;
+    transition:0.3s;
+}
+
+.card input:focus{
+    outline:none;
+    border:1px solid #e10600;
+    box-shadow:0 0 10px #e10600;
+}
+
+/* Agree Checkbox */
+.agree-box{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    font-size:13px;
+    margin-bottom:15px;
+}
+
+.agree-box input{
+    margin-right:8px;
+}
+
+/* Button */
+.btn-primary{
+    background:#e10600;
+    color:white;
+    border:none;
+    padding:12px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:0.3s;
+    font-weight:600;
+}
+
+.btn-primary:hover{
+    background:#ff1a1a;
+    box-shadow:0 0 15px #e10600;
+}
+
+.full{
+    width:100%;
+}
+
+/* Link */
+.link-login{
+    display:block;
+    margin-top:15px;
+    color:#ccc;
+    font-size:14px;
+    text-decoration:none;
+}
+
+.link-login:hover{
+    color:#ff1a1a;
+}

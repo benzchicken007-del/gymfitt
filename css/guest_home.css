@@ -1,0 +1,171 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#0f0f0f,#1c1c1c);
+    color:white;
+    transition:.3s;
+    text-align:center;
+}
+
+body.light-mode{
+    background:linear-gradient(135deg,#e3f2fd,#ffffff);
+    color:#0d47a1;
+}
+
+/* HEADER */
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 50px;
+    background:rgba(0,0,0,0.8);
+}
+
+body.light-mode header{
+    background:white;
+    box-shadow:0 4px 20px rgba(0,0,0,0.05);
+}
+
+.logo{
+    font-size:24px;
+    font-weight:700;
+    color:#ff3c3c;
+}
+
+body.light-mode .logo{
+    color:#1976d2;
+}
+
+/* MENU */
+.menu-wrapper{position:relative;}
+
+.hamburger{
+    font-size:26px;
+    cursor:pointer;
+}
+
+.dropdown{
+    position:absolute;
+    right:0;
+    top:40px;
+    background:#1a1a1a;
+    width:200px;
+    border-radius:12px;
+    display:none;
+    overflow:hidden;
+}
+
+body.light-mode .dropdown{
+    background:white;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+.dropdown form,
+.dropdown a{
+    display:block;
+    padding:12px;
+    text-decoration:none;
+    color:inherit;
+}
+
+.dropdown button{
+    width:100%;
+    background:none;
+    border:none;
+    text-align:left;
+    cursor:pointer;
+    color:inherit;
+}
+
+.dropdown a:hover,
+.dropdown button:hover{
+    background:#ff3c3c;
+    color:white;
+}
+
+body.light-mode .dropdown a:hover,
+body.light-mode .dropdown button:hover{
+    background:#1976d2;
+    color:white;
+}
+
+/* DASHBOARD */
+.dashboard{
+    margin-top:100px;
+}
+
+.dashboard h1{
+    font-size:32px;
+}
+
+/* BUTTON */
+button{
+    padding:10px 20px;
+    border:none;
+    border-radius:10px;
+    background:#ff3c3c;
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+body.light-mode button{
+    background:#1976d2;
+}
+
+/* MODAL */
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+}
+
+.mission-card{
+    background:#222;
+    padding:30px;
+    border-radius:20px;
+    width:350px;
+}
+
+body.light-mode .mission-card{
+    background:white;
+    color:#222;
+}
+
+.mission-choice{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.mission-box{
+    padding:15px;
+    border-radius:15px;
+    background:#111;
+}
+
+body.light-mode .mission-box{
+    background:#f5f5f5;
+}
+
+.bronze{
+    border:2px solid #cd7f32;
+}
+
+.free{
+    border:2px solid #00c853;
+}
