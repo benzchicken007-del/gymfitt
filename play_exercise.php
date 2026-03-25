@@ -32,381 +32,226 @@ $result = $stmt2->get_result();
 while ($row = $result->fetch_assoc()) {
     $steps[] = $row;
 }
+
+// ตั้งชื่อหน้าเว็บและเรียกใช้ Header
+$page_title = "ฝึกซ้อมอิสระ: " . htmlspecialchars($exercise['exercise_name']);
+include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="th">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ฝึกซ้อมอิสระ: <?= htmlspecialchars($exercise['exercise_name']) ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        :root {
-            --primary: #38bdf8;
-            --bg-dark: #0a0a0a;
-            --card-bg: #141414;
-            --border: rgba(255, 255, 255, 0.1);
-        }
+<?php if (!$is_guest) include 'includes/navbar.php'; ?>
 
-        body {
-            background: var(--bg-dark);
-            color: #fff;
-            font-family: 'Poppins', sans-serif;
-            text-align: center;
-            margin: 0;
-            padding-bottom: 50px;
-        }
+<main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
 
-        .container {
-            padding: 20px;
-            max-width: 900px;
-            margin: auto;
-        }
+    <div class="fixed top-20 right-0 w-96 h-96 bg-red-600/10 blur-[100px] rounded-full pointer-events-none z-[-1]"></div>
 
-        /* --- Info Card Style --- */
-        .info-card {
-            background: var(--card-bg);
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            padding: 25px;
-            margin-bottom: 30px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 25px;
-            text-align: left;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
+    <div class="bg-card rounded-3xl p-6 border border-red-900/30 shadow-2xl flex flex-col md:flex-row gap-6 mb-8 relative overflow-hidden">
+        <div class="absolute -top-20 -right-20 w-48 h-48 bg-primary/10 blur-[50px] rounded-full"></div>
 
-        .info-media {
-            flex: 1 1 300px;
-            border-radius: 16px;
-            overflow: hidden;
-            background: #000;
-            border: 1px solid var(--border);
-            aspect-ratio: 16/9;
-        }
+        <div class="flex-1 rounded-2xl overflow-hidden bg-darker border border-red-900/40 aspect-video relative z-10">
+            <?php
+            $file = !empty($exercise['exercise_video']) ? $exercise['exercise_video'] : $exercise['exercise_image'];
 
-        .info-media video,
-        .info-media img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+            if (!empty($file)):
+                $filename = basename($file);
+                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-        .info-text {
-            flex: 2 1 300px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+                // Check file location
+                $filePath = "uploads/exercises/" . $filename;
+                if (!file_exists($filePath) && file_exists("uploads/" . $filename)) {
+                    $filePath = "uploads/" . $filename;
+                }
 
-        .info-text h1 {
-            color: var(--primary);
-            margin: 0 0 10px 0;
-            font-size: 28px;
-        }
-
-        .badge-accuracy {
-            display: inline-block;
-            padding: 6px 15px;
-            border-radius: 50px;
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--primary);
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            width: fit-content;
-        }
-
-        .desc-title {
-            color: #fbbf24;
-            font-size: 14px;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .desc-content {
-            font-size: 13px;
-            opacity: 0.8;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            white-space: pre-wrap;
-        }
-
-        /* --- Camera Style --- */
-        .camera-box {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 4/3;
-            margin: 0 auto 20px;
-            border-radius: 20px;
-            overflow: hidden;
-            background: #000;
-            border: 3px solid var(--primary);
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
-        }
-
-        .input_video {
-            display: none;
-        }
-
-        .output_canvas {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        .status-panel {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
-
-        .btn-group {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 25px;
-            flex-wrap: wrap;
-        }
-
-        .btn-back {
-            padding: 14px 30px;
-            border-radius: 12px;
-            background: #333;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-
-        .btn-back:hover {
-            background: #ef4444;
-        }
-
-        .btn-finish {
-            padding: 14px 30px;
-            border-radius: 12px;
-            background: #22c55e;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
-        }
-
-        .btn-finish:hover {
-            background: #16a34a;
-            transform: translateY(-2px);
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-
-        <div class="info-card">
-            <div class="info-media">
-                <?php
-                $file = $exercise['exercise_video'] ? $exercise['exercise_video'] : $exercise['exercise_image'];
-                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                if (!empty($file)):
-                    if (in_array($ext, ['mp4', 'webm', 'mov'])): ?>
-                        <video src="uploads/<?= htmlspecialchars($file) ?>" controls loop muted playsinline autoplay></video>
-                    <?php else: ?>
-                        <img src="uploads/<?= htmlspecialchars($file) ?>" alt="Exercise">
-                    <?php endif;
-                else: ?>
-                    <div style="height:100%; display:flex; align-items:center; justify-content:center; color:#555; background:#222;">
-                        <i class="fa-solid fa-image fa-3x"></i>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <div class="info-text">
-                <h1><?= htmlspecialchars($exercise['exercise_name']) ?> <span style="font-size:16px; color:#fff; opacity:0.5;">(Free Mode)</span></h1>
-                <div class="badge-accuracy"><i class="fa-solid fa-crosshairs"></i> เกณฑ์ความแม่นยำ: <?= (int)$exercise['required_accuracy'] ?>%</div>
-
-                <?php if (!empty($exercise['exercise_detail'])): ?>
-                    <div class="desc-title"><i class="fa-solid fa-circle-info"></i> รายละเอียดท่า:</div>
-                    <div class="desc-content"><?= htmlspecialchars($exercise['exercise_detail']) ?></div>
-                <?php endif; ?>
-
-                <?php if (!empty($exercise['how_to'])): ?>
-                    <div class="desc-title"><i class="fa-solid fa-person-running"></i> วิธีปฏิบัติ:</div>
-                    <div class="desc-content" style="color:#e2e8f0;"><?= htmlspecialchars($exercise['how_to']) ?></div>
-                <?php endif; ?>
-            </div>
+                if (in_array($ext, ['mp4', 'webm', 'mov'])): ?>
+                    <video src="<?= $filePath ?>" class="w-full h-full object-cover" controls loop muted playsinline autoplay></video>
+                <?php else: ?>
+                    <img src="<?= $filePath ?>" class="w-full h-full object-cover" alt="Exercise">
+                <?php endif;
+            else: ?>
+                <div class="w-full h-full flex items-center justify-center text-zinc-600 bg-zinc-900">
+                    <i class="fa-solid fa-image fa-3x"></i>
+                </div>
+            <?php endif; ?>
         </div>
 
-        <h2 style="text-align: left; margin-bottom: 15px;"><i class="fa-solid fa-video" style="color: var(--primary);"></i> เริ่มการฝึกซ้อม</h2>
-        <div class="camera-box">
-            <video class="input_video" autoplay playsinline></video>
-            <canvas class="output_canvas"></canvas>
-        </div>
+        <div class="flex-[1.5] flex flex-col justify-center relative z-10">
+            <h1 class="text-3xl font-bold text-white mb-2"><?= htmlspecialchars($exercise['exercise_name']) ?> <span class="text-lg text-zinc-500 font-normal">(Free Mode)</span></h1>
 
-        <div class="status-panel">
-            <h3 id="statusText" style="color:var(--primary); margin-top:0;">กำลังเตรียมกล้องและ AI...</h3>
-            <div style="font-size: 35px; font-weight: bold; margin-top: 10px;">
-                จำนวนครั้ง: <span id="repVal" style="color:#22c55e;">0</span>
+            <div class="inline-block px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm font-bold w-fit mb-4">
+                <i class="fa-solid fa-crosshairs"></i> เกณฑ์ความแม่นยำ: <?= (int)$exercise['required_accuracy'] ?>%
             </div>
-        </div>
 
-        <div class="btn-group">
-            <button class="btn-back" onclick="window.location='<?= $is_guest ? 'guest_home.php' : 'home.php' ?>'">
-                <i class="fa-solid fa-arrow-left"></i> ออกจากการฝึก
-            </button>
-            <button class="btn-finish" onclick="finishExercise()">
-                <i class="fa-solid fa-save"></i> บันทึกและจบการฝึก
-            </button>
+            <?php if (!empty($exercise['exercise_detail'])): ?>
+                <div class="text-yellow-500 text-sm font-bold mb-1"><i class="fa-solid fa-circle-info"></i> รายละเอียดท่า:</div>
+                <div class="text-zinc-400 text-sm leading-relaxed mb-4 whitespace-pre-wrap"><?= htmlspecialchars($exercise['exercise_detail']) ?></div>
+            <?php endif; ?>
+
+            <?php if (!empty($exercise['how_to'])): ?>
+                <div class="text-primary text-sm font-bold mb-1"><i class="fa-solid fa-person-running"></i> วิธีปฏิบัติ:</div>
+                <div class="text-white text-sm leading-relaxed whitespace-pre-wrap"><?= htmlspecialchars($exercise['how_to']) ?></div>
+            <?php endif; ?>
         </div>
     </div>
 
-    <script>
-        const steps = <?= json_encode($steps) ?>;
-        const REQUIRED_ACCURACY = <?= (int)$exercise['required_accuracy'] ?>;
-        let currentStepIdx = 0;
-        let repCount = 0;
-        let similarityHistory = [];
+    <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-video text-primary"></i> กล้องตรวจจับ AI</h2>
 
-        const videoElement = document.querySelector('.input_video');
-        const canvasElement = document.querySelector('.output_canvas');
-        const canvasCtx = canvasElement.getContext('2d');
+    <div class="relative w-full max-w-4xl mx-auto aspect-[4/3] rounded-3xl overflow-hidden bg-darker border-2 border-primary shadow-[0_0_30px_rgba(220,38,38,0.2)]">
+        <video class="input_video hidden" autoplay playsinline></video>
+        <canvas class="output_canvas w-full h-full object-cover -scale-x-100 absolute top-0 left-0"></canvas>
+    </div>
 
-        function calculateAngle(a, b, c) {
-            if (!a || !b || !c) return 0;
-            const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-            let angle = Math.abs(radians * 180.0 / Math.PI);
-            return angle > 180 ? 360 - angle : angle;
+    <div class="bg-card max-w-4xl mx-auto mt-6 p-6 rounded-3xl border border-red-900/30 text-center shadow-xl">
+        <h3 id="statusText" class="text-lg font-bold text-primary mb-2">กำลังเตรียมกล้องและ AI...</h3>
+        <div class="text-4xl font-black text-white">
+            จำนวนครั้ง: <span id="repVal" class="text-green-500 drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]">0</span>
+        </div>
+    </div>
+
+    <div class="flex justify-center gap-4 mt-8">
+        <button onclick="window.location='<?= $is_guest ? 'guest_home.php' : 'home.php' ?>'" class="bg-darker border border-zinc-700 hover:bg-zinc-800 text-white font-bold py-3 px-6 rounded-xl transition duration-300">
+            <i class="fa-solid fa-arrow-left mr-2"></i> ออกจากการฝึก
+        </button>
+        <button onclick="finishExercise()" class="bg-primary hover:bg-white hover:text-primary text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition duration-300 transform hover:-translate-y-1">
+            <i class="fa-solid fa-save mr-2"></i> บันทึกและจบการฝึก
+        </button>
+    </div>
+
+</main>
+
+<script>
+    const steps = <?= json_encode($steps) ?>;
+    const REQUIRED_ACCURACY = <?= (int)$exercise['required_accuracy'] ?>;
+    let currentStepIdx = 0;
+    let repCount = 0;
+    let similarityHistory = [];
+
+    const videoElement = document.querySelector('.input_video');
+    const canvasElement = document.querySelector('.output_canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+
+    function calculateAngle(a, b, c) {
+        if (!a || !b || !c) return 0;
+        const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+        let angle = Math.abs(radians * 180.0 / Math.PI);
+        return angle > 180 ? 360 - angle : angle;
+    }
+
+    function calculateSimilarity(current, targetTemplateJson) {
+        if (!targetTemplateJson) return 0;
+        const target = JSON.parse(targetTemplateJson);
+
+        const tA = target.angles || {
+            le: 0,
+            re: 0,
+            lk: 0,
+            rk: 0,
+            ls: 0,
+            rs: 0,
+            lh: 0,
+            rh: 0
+        };
+
+        const angleDiffs = [
+            Math.abs(current.le - (tA.le || 0)), Math.abs(current.re - (tA.re || 0)),
+            Math.abs(current.lk - (tA.lk || 0)), Math.abs(current.rk - (tA.rk || 0))
+        ];
+
+        if (tA.ls !== undefined && tA.rs !== undefined && tA.lh !== undefined && tA.rh !== undefined) {
+            angleDiffs.push(Math.abs(current.ls - tA.ls));
+            angleDiffs.push(Math.abs(current.rs - tA.rs));
+            angleDiffs.push(Math.abs(current.lh - tA.lh));
+            angleDiffs.push(Math.abs(current.rh - tA.rh));
         }
 
-        // ฟังก์ชันคำนวณที่อัปเกรดให้รองรับข้อมูล 12 จุด
-        function calculateSimilarity(current, targetTemplateJson) {
-            if (!targetTemplateJson) return 0;
-            const target = JSON.parse(targetTemplateJson);
+        let angleScore = 100 - (angleDiffs.reduce((a, b) => a + b) / angleDiffs.length);
+        return Math.round(Math.max(0, Math.min(100, angleScore)));
+    }
 
-            const tA = target.angles || {
-                le: 0,
-                re: 0,
-                lk: 0,
-                rk: 0,
-                ls: 0,
-                rs: 0,
-                lh: 0,
-                rh: 0
+    function finishExercise() {
+        let avgSim = similarityHistory.length > 0 ? Math.round(similarityHistory.reduce((a, b) => a + b) / similarityHistory.length) : 0;
+        if (<?= $is_guest ? 'true' : 'false' ?>) {
+            window.location = 'guest_home.php?status=completed';
+        } else {
+            // อ้างอิง Path ของ Actions ตามที่คุณจัดโฟลเดอร์ไว้
+            window.location = `actions/complete_mission.php?exercise_id=<?= $ex_id ?>&accuracy=${avgSim}&reps=${repCount}`;
+        }
+    }
+
+    const pose = new Pose({
+        locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    });
+    pose.setOptions({
+        modelComplexity: 1,
+        smoothLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+
+    pose.onResults(results => {
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+        if (results.poseLandmarks && steps.length > 0) {
+            drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
+                color: '#dc2626',
+                lineWidth: 3
+            }); // สีแดง
+            drawLandmarks(canvasCtx, results.poseLandmarks, {
+                color: '#ffffff',
+                fillColor: '#dc2626',
+                lineWidth: 1,
+                radius: 4
+            });
+
+            const lm = results.poseLandmarks;
+            const currentData = {
+                le: calculateAngle(lm[11], lm[13], lm[15]),
+                re: calculateAngle(lm[12], lm[14], lm[16]),
+                ls: calculateAngle(lm[13], lm[11], lm[23]),
+                rs: calculateAngle(lm[14], lm[12], lm[24]),
+                lk: calculateAngle(lm[23], lm[25], lm[27]),
+                rk: calculateAngle(lm[24], lm[26], lm[28]),
+                lh: calculateAngle(lm[25], lm[23], lm[11]),
+                rh: calculateAngle(lm[26], lm[24], lm[12])
             };
 
-            const angleDiffs = [
-                Math.abs(current.le - (tA.le || 0)),
-                Math.abs(current.re - (tA.re || 0)),
-                Math.abs(current.lk - (tA.lk || 0)),
-                Math.abs(current.rk - (tA.rk || 0))
-            ];
+            let sim = calculateSimilarity(currentData, steps[currentStepIdx].angle_template);
+            const statusText = document.getElementById('statusText');
 
-            // ถ้าระบบมีไหล่/สะโพกด้วย จะนำมาคำนวณเพิ่ม (สำหรับท่าที่บันทึกจากระบบใหม่)
-            if (tA.ls !== undefined && tA.rs !== undefined && tA.lh !== undefined && tA.rh !== undefined) {
-                angleDiffs.push(Math.abs(current.ls - tA.ls));
-                angleDiffs.push(Math.abs(current.rs - tA.rs));
-                angleDiffs.push(Math.abs(current.lh - tA.lh));
-                angleDiffs.push(Math.abs(current.rh - tA.rh));
-            }
-
-            let angleScore = 100 - (angleDiffs.reduce((a, b) => a + b) / angleDiffs.length);
-            return Math.round(Math.max(0, Math.min(100, angleScore)));
-        }
-
-        function finishExercise() {
-            let avgSim = similarityHistory.length > 0 ? Math.round(similarityHistory.reduce((a, b) => a + b) / similarityHistory.length) : 0;
-            if (<?= $is_guest ? 'true' : 'false' ?>) {
-                window.location = 'guest_home.php?status=completed';
-            } else {
-                window.location = `complete_mission.php?exercise_id=<?= $ex_id ?>&accuracy=${avgSim}&reps=${repCount}`;
-            }
-        }
-
-        const pose = new Pose({
-            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-        });
-        pose.setOptions({
-            modelComplexity: 1,
-            smoothLandmarks: true,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-
-        pose.onResults(results => {
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-
-            if (results.poseLandmarks && steps.length > 0) {
-                drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
-                    color: '#00f2ff',
-                    lineWidth: 2
-                });
-                drawLandmarks(canvasCtx, results.poseLandmarks, {
-                    color: '#ffffff',
-                    fillColor: '#ef4444',
-                    radius: 3
-                });
-
-                const lm = results.poseLandmarks;
-                const currentData = {
-                    le: calculateAngle(lm[11], lm[13], lm[15]),
-                    re: calculateAngle(lm[12], lm[14], lm[16]),
-                    ls: calculateAngle(lm[13], lm[11], lm[23]),
-                    rs: calculateAngle(lm[14], lm[12], lm[24]),
-                    lk: calculateAngle(lm[23], lm[25], lm[27]),
-                    rk: calculateAngle(lm[24], lm[26], lm[28]),
-                    lh: calculateAngle(lm[25], lm[23], lm[11]),
-                    rh: calculateAngle(lm[26], lm[24], lm[12])
-                };
-
-                let sim = calculateSimilarity(currentData, steps[currentStepIdx].angle_template);
-
-                if (sim >= REQUIRED_ACCURACY) {
-                    similarityHistory.push(sim);
-                    if (currentStepIdx < steps.length - 1) {
-                        currentStepIdx++;
-                        document.getElementById('statusText').innerText = `เยี่ยมมาก! ทำขั้นตอนที่ ${currentStepIdx + 1} ต่อเลย`;
-                        document.getElementById('statusText').style.color = "var(--primary)";
-                    } else {
-                        repCount++;
-                        currentStepIdx = 0;
-                        document.getElementById('repVal').innerText = repCount;
-                        document.getElementById('statusText').innerText = "นับ 1 ครั้ง! กลับไปเริ่มขั้นตอนแรกใหม่";
-                        document.getElementById('statusText').style.color = "#22c55e";
-                    }
+            if (sim >= REQUIRED_ACCURACY) {
+                similarityHistory.push(sim);
+                if (currentStepIdx < steps.length - 1) {
+                    currentStepIdx++;
+                    statusText.innerText = `เยี่ยมมาก! ทำขั้นตอนที่ ${currentStepIdx + 1} ต่อเลย`;
+                    statusText.className = "text-lg font-bold text-white mb-2 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]";
                 } else {
-                    document.getElementById('statusText').innerText = `กำลังทำขั้นตอนที่ ${currentStepIdx + 1} (ความแม่นยำ: ${sim}%)`;
-                    document.getElementById('statusText').style.color = "#fbbf24";
+                    repCount++;
+                    currentStepIdx = 0;
+                    document.getElementById('repVal').innerText = repCount;
+                    statusText.innerText = "นับ 1 ครั้ง! กลับไปเริ่มขั้นตอนแรกใหม่";
+                    statusText.className = "text-lg font-bold text-green-500 mb-2 drop-shadow-[0_0_5px_rgba(34,197,94,0.8)]";
                 }
+            } else {
+                statusText.innerText = `กำลังทำขั้นตอนที่ ${currentStepIdx + 1} (ความแม่นยำ: ${sim}%)`;
+                statusText.className = "text-lg font-bold text-primary mb-2";
             }
-        });
+        }
+    });
 
-        new Camera(videoElement, {
-            onFrame: async () => {
-                await pose.send({
-                    image: videoElement
-                });
-            },
-            width: 640,
-            height: 480
-        }).start();
-    </script>
+    new Camera(videoElement, {
+        onFrame: async () => {
+            await pose.send({
+                image: videoElement
+            });
+        },
+        width: 640,
+        height: 480
+    }).start();
+</script>
 </body>
 
 </html>
