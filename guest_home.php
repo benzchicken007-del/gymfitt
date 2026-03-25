@@ -8,216 +8,138 @@ $conn->set_charset("utf8mb4");
 // ดึงข้อมูลท่าออกกำลังกายทั้งหมด
 $ex_query = $conn->query("SELECT * FROM exercises ORDER BY exercise_id DESC");
 
-if (!isset($_SESSION['theme'])) $_SESSION['theme'] = "dark";
-if (isset($_POST['toggleTheme'])) $_SESSION['theme'] = ($_SESSION['theme'] == "dark") ? "light" : "dark";
+// เรียกใช้ Header เพื่อดึง Tailwind และ CSS พื้นฐาน
+$page_title = "แดชบอร์ดทดลองใช้ - Gymfitt";
+include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="th">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GYMFITT - Guest Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #ef4444;
-            --bg-dark: #0f0f0f;
-            --card-dark: #1a1a1a;
-            --border: rgba(255, 255, 255, 0.1);
-        }
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .swal2-popup {
+        background: #140505 !important;
+        border: 1px solid #7f1d1d !important;
+        color: #fff !important;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+    .swal2-confirm {
+        background: #dc2626 !important;
+    }
+</style>
 
-        body {
-            background: var(--bg-dark);
-            color: #fff;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        body.light-mode {
-            background: #f8fafc;
-            color: #1e293b;
-            --card-dark: #fff;
-            --border: rgba(0, 0, 0, 0.1);
-        }
-
-        header {
-            padding: 20px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
-        }
-
-        body.light-mode header {
-            background: rgba(255, 255, 255, 0.8);
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
-            letter-spacing: 2px;
-        }
-
-        .dashboard {
-            text-align: center;
-            padding: 60px 20px 20px;
-        }
-
-        .dashboard h1 {
-            font-size: clamp(2rem, 4vw, 3rem);
-            margin-bottom: 10px;
-        }
-
-        .dashboard p {
-            color: #94a3b8;
-            font-size: 16px;
-            margin-bottom: 40px;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            padding: 0 5% 50px;
-        }
-
-        .ex-card {
-            background: var(--card-dark);
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            transition: 0.3s;
-        }
-
-        .ex-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.2);
-        }
-
-        .ex-media {
-            height: 200px;
-            width: 100%;
-            background: #000;
-        }
-
-        .ex-media img,
-        .ex-media video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .ex-info {
-            padding: 20px;
-        }
-
-        .ex-info h3 {
-            font-size: 18px;
-            margin-bottom: 5px;
-        }
-
-        .ex-info p {
-            font-size: 13px;
-            opacity: 0.6;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .btn-play {
-            display: block;
-            width: 100%;
-            text-align: center;
-            background: var(--primary);
-            color: white;
-            padding: 12px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-
-        .btn-play:hover {
-            background: #dc2626;
-        }
-
-        .btn-login {
-            border: 1px solid var(--border);
-            padding: 8px 15px;
-            border-radius: 10px;
-            color: inherit;
-            text-decoration: none;
-            font-size: 14px;
-        }
-    </style>
-</head>
-
-<body class="<?= ($_SESSION['theme'] == "light") ? 'light-mode' : '' ?>">
-
-    <header>
-        <div class="logo">GYMFITT</div>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <form method="POST"><button type="submit" name="toggleTheme" class="btn-login" style="background:none; cursor:pointer;"><i class="fa-solid fa-moon"></i></button></form>
-            <a href="login.php" class="btn-login">เข้าสู่ระบบสมาชิก</a>
-        </div>
-    </header>
-
-    <div class="dashboard">
-        <h1>โหมดผู้ใช้ทั่วไป (Guest) 🏋️‍♂️</h1>
-        <p>เลือกท่าออกกำลังกายอิสระ (ไม่จำกัดจำนวน ไม่มีการบันทึกประวัติ)</p>
-    </div>
-
-    <div class="grid-container">
-        <?php if ($ex_query->num_rows > 0): while ($ex = $ex_query->fetch_assoc()): ?>
-                <div class="ex-card">
-                    <div class="ex-media">
-                        <?php if (!empty($ex['exercise_image'])): ?>
-                            <img src="uploads/<?= htmlspecialchars($ex['exercise_image']) ?>" alt="Cover">
-                        <?php else: ?>
-                            <div style="height:100%; display:flex; align-items:center; justify-content:center; color:#555;"><i class="fa-solid fa-dumbbell fa-3x"></i></div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="ex-info">
-                        <h3><?= htmlspecialchars($ex['exercise_name']) ?></h3>
-                        <p><?= htmlspecialchars($ex['exercise_detail']) ?></p>
-                        <a href="play_exercise.php?id=<?= $ex['exercise_id'] ?>&guest=1" class="btn-play">เริ่มฝึกซ้อม</a>
-                    </div>
+<nav class="bg-white dark:bg-dark border-b border-gray-200 dark:border-red-900/40 sticky top-0 z-50 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <a href="index.php" class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-primary to-red-400 dark:to-white rounded-xl flex items-center justify-center shadow-lg shadow-red-600/40">
+                    <i class="fa-solid fa-dumbbell text-white dark:text-darker"></i>
                 </div>
-            <?php endwhile;
-        else: ?>
-            <p style="text-align:center; grid-column:1/-1; opacity:0.5;">ยังไม่มีท่าออกกำลังกายในระบบ</p>
-        <?php endif; ?>
+                <span class="font-bold text-xl tracking-wider text-gray-900 dark:text-white">GYM<span class="text-primary drop-shadow-[0_0_8px_rgba(220,38,38,0.8)]">FITT</span></span>
+                <span class="text-xs text-gray-500 dark:text-zinc-400 border border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 rounded px-2 py-0.5 ml-2 font-bold tracking-widest">GUEST</span>
+            </a>
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button id="themeToggleBtn" class="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 hover:text-primary dark:hover:text-white transition shadow-inner">
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                    <i class="fa-solid fa-moon block dark:hidden"></i>
+                </button>
+                <a href="login.php" class="text-gray-600 dark:text-zinc-300 hover:text-primary dark:hover:text-white font-bold py-2 px-3 sm:px-4 transition text-sm sm:text-base">เข้าสู่ระบบ</a>
+                <a href="register.php" class="bg-primary hover:bg-red-600 text-white font-bold py-2 px-4 sm:px-5 rounded-xl shadow-md dark:shadow-[0_0_10px_rgba(220,38,38,0.4)] transition text-sm sm:text-base">สมัครสมาชิก</a>
+            </div>
+        </div>
     </div>
+</nav>
 
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('status') === 'completed') {
-            Swal.fire({
-                title: 'ฝึกซ้อมเสร็จสิ้น!',
-                text: 'เยี่ยมมาก! สมัครสมาชิกเพื่อบันทึกสถิติและรับรางวัลสิ',
-                icon: 'success',
-                confirmButtonColor: '#ef4444'
-            });
-        }
-    </script>
+<main class="bg-gray-50 dark:bg-transparent transition-colors duration-300 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
+        <div class="fixed top-20 right-0 w-96 h-96 bg-red-600/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
+
+        <div class="bg-white dark:bg-card rounded-3xl p-8 shadow-xl dark:shadow-2xl border border-gray-200 dark:border-red-900/30 text-center relative overflow-hidden mb-12 transition-colors duration-300">
+            <div class="absolute -top-20 -right-20 w-48 h-48 bg-primary/10 dark:bg-primary/20 blur-[50px] rounded-full z-0"></div>
+
+            <div class="relative z-10">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">ยินดีต้อนรับสู่โหมดทดลอง <span class="text-primary">Gymfitt</span> 💪</h1>
+                <p class="text-gray-600 dark:text-zinc-400 mb-6 max-w-2xl mx-auto leading-relaxed">
+                    ในฐานะผู้ใช้ทั่วไป คุณสามารถทดสอบระบบ AI ตรวจจับท่าทางได้ฟรีแบบไม่จำกัด! <br>
+                    แต่หากต้องการ <b>เก็บ EXP, อัปเลเวล, ทำภารกิจรายวัน และสะสมเหรียญแลกฉายา</b> กรุณาสมัครสมาชิกเพื่อใช้งานฟีเจอร์จัดเต็ม!
+                </p>
+                <button onclick="window.location='register.php'" class="bg-primary hover:bg-red-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg dark:shadow-[0_0_15px_rgba(220,38,38,0.5)] transition transform hover:-translate-y-1">
+                    <i class="fa-solid fa-user-plus mr-2"></i> สมัครสมาชิกฟรี ตอนนี้เลย!
+                </button>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-dumbbell text-primary dark:drop-shadow-[0_0_5px_rgba(220,38,38,0.8)]"></i> ท่าฝึกซ้อมที่เปิดให้ทดลอง
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <?php
+                if ($ex_query->num_rows > 0):
+                    while ($ex = $ex_query->fetch_assoc()):
+                        $ex_img = "uploads/exercises/" . $ex['exercise_image'];
+                        if (empty($ex['exercise_image']) || !file_exists($ex_img)) {
+                            $ex_img = "uploads/" . $ex['exercise_image'];
+                            if (!file_exists($ex_img)) $ex_img = "assets/images/no-image.png";
+                        }
+                ?>
+                        <div class="bg-gray-50 dark:bg-darker rounded-2xl border border-gray-200 dark:border-zinc-800 hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-lg dark:hover:shadow-[0_0_20px_rgba(220,38,38,0.15)] cursor-pointer transition duration-300 group overflow-hidden flex flex-col" onclick="window.location.href='play_exercise.php?id=<?= $ex['exercise_id'] ?>&guest=1'">
+                            <div class="w-full h-48 bg-gray-200 dark:bg-zinc-900 relative overflow-hidden">
+                                <div class="absolute top-3 right-3 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-lg z-10 shadow-md border border-red-400">ทดลองฟรี</div>
+                                <img src="<?= $ex_img ?>" onerror="this.src='assets/images/no-image.png'" class="w-full h-full object-cover opacity-90 dark:opacity-80 group-hover:opacity-100 group-hover:scale-105 transition duration-500">
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col relative bg-gradient-to-t from-white dark:from-card via-white dark:via-card to-transparent -mt-5 pt-6 transition-colors">
+                                <h4 class="font-bold text-gray-900 dark:text-white text-xl group-hover:text-primary transition mb-2"><?= htmlspecialchars($ex['exercise_name']) ?></h4>
+                                <p class="text-xs text-gray-500 dark:text-zinc-400 line-clamp-2 mb-4 flex-1"><?= htmlspecialchars($ex['exercise_detail']) ?></p>
+                                <div class="mt-auto flex justify-between items-center text-sm font-bold text-primary">
+                                    <span>เริ่มการฝึก <i class="fa-solid fa-play ml-1 text-xs"></i></span>
+                                    <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+                                </div>
+                            </div>
+                        </div>
+                    <?php
+                    endwhile;
+                else:
+                    ?>
+                    <div class="col-span-full text-center py-10">
+                        <p class="text-gray-500 dark:text-zinc-500 mb-4">ยังไม่มีท่าออกกำลังกายในระบบ</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // สคริปต์สลับธีม
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const htmlElement = document.documentElement;
+    if (localStorage.getItem('gymfitt-theme') === 'light') htmlElement.classList.remove('dark');
+    else htmlElement.classList.add('dark');
+
+    themeToggleBtn.addEventListener('click', function() {
+        htmlElement.classList.toggle('dark');
+        localStorage.setItem('gymfitt-theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'completed') {
+        Swal.fire({
+            title: 'ฝึกซ้อมเสร็จสิ้น!',
+            text: 'เยี่ยมมาก! อยากบันทึกสถิติและรับรางวัลไหม? สมัครสมาชิกเลย!',
+            icon: 'success',
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'สมัครสมาชิก',
+            showCancelButton: true,
+            cancelButtonText: 'ปิด',
+            cancelButtonColor: '#27272a',
+            background: document.documentElement.classList.contains('dark') ? '#140505' : '#ffffff',
+            color: document.documentElement.classList.contains('dark') ? '#ffffff' : '#1f2937'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'register.php';
+            }
+        });
+    }
+</script>
 </body>
 
 </html>
