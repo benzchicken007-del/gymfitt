@@ -27,7 +27,7 @@ if (isset($_POST['saveProfile'])) {
         WHERE user_id=$user_id");
 
     $_SESSION['success'] = "บันทึกข้อมูลสำเร็จ!";
-    header("Location: profile.php");
+    header("Location: home.php");
     exit();
 }
 
@@ -44,6 +44,7 @@ if (isset($_POST['uploadAvatar']) && isset($_FILES['avatar']['name'])) {
 
     if (move_uploaded_file($_FILES['avatar']['tmp_name'], $path)) {
         $conn->query("UPDATE users SET profile_image='$path' WHERE user_id=$user_id");
+
         $_SESSION['success'] = "อัปโหลดรูปสำเร็จ!";
     }
 
@@ -51,23 +52,31 @@ if (isset($_POST['uploadAvatar']) && isset($_FILES['avatar']['name'])) {
     exit();
 }
 
-$user = $conn->query("SELECT * FROM users WHERE user_id=$user_id")->fetch_assoc();
+$stmtUser = $conn->prepare("SELECT u.*, t.title_id as active_id, t.title_name, t.title_color FROM users u LEFT JOIN shop_titles t ON u.title_active_id = t.title_id WHERE u.user_id=?");
+$stmtUser->bind_param("i", $user_id);
+$stmtUser->execute();
+$user = $stmtUser->get_result()->fetch_assoc();
 
-// --- โค้ดดึงรูปโปรไฟล์ (แบบเดียวกับหน้า home.php) ---
-$db_pic = !empty($user['profile_image']) ? $user['profile_image'] : "";
-$profile_pic = "uploads/avatars/Avatar.jpg";
+$full_name = !empty($user['full_name']) ? $user['full_name'] : $user['username'];
+$active_title = !empty($user['title_name']) ? $user['title_name'] : "";
+$active_title_color = !empty($user['title_color']) ? $user['title_color'] : "#ffffff";
 
-if ($db_pic) {
-    $filename = basename($db_pic);
+// ดึงค่าอย่างปลอดภัยแบบเดียวกับหน้า home.php
+$current_level = !empty($user['level']) ? (int)$user['level'] : 0;
+$current_exp = !empty($user['exp']) ? (int)$user['exp'] : 0;
+$tokens = !empty($user['tokens']) ? (int)$user['tokens'] : 0;
+
+// --- ระบบรูปโปรไฟล์แบบป้องกันรูปหาย (แบบเดียวกับหน้า home.php) ---
+$default_avatar = "https://api.dicebear.com/7.x/initials/svg?seed=" . urlencode($full_name) . "&backgroundColor=dc2626&textColor=ffffff";
+$profile_pic = $default_avatar;
+if (!empty($user['profile_image'])) {
+    $filename = basename($user['profile_image']);
     if (file_exists("uploads/avatars/" . $filename)) {
         $profile_pic = "uploads/avatars/" . $filename;
     } elseif (file_exists("uploads/" . $filename)) {
         $profile_pic = "uploads/" . $filename;
-    } elseif (file_exists($db_pic)) {
-        $profile_pic = $db_pic;
     }
 }
-$full_name = !empty($user['full_name']) ? $user['full_name'] : $user['username'];
 // ------------------------------------------------
 
 $page_title = "โปรไฟล์ของฉัน - Gymfitt";
@@ -104,10 +113,10 @@ include 'includes/header.php';
 
             <div class="flex flex-col items-center mb-10 relative z-10">
                 <div class="relative group">
-                    <img src="<?= $profile_pic ?>" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/initials/svg?seed=<?= urlencode($full_name) ?>&backgroundColor=dc2626&textColor=ffffff';" class="w-36 h-36 rounded-full border-4 border-white dark:border-darker object-cover shadow-lg dark:shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                    <img src="<?php echo $profile_pic; ?>" class="w-36 h-36 rounded-full border-4 border-white dark:border-darker object-cover shadow-lg dark:shadow-[0_0_15px_rgba(220,38,38,0.5)] bg-gray-200">
 
                     <form method="POST" enctype="multipart/form-data" id="avatarForm" class="absolute bottom-1 right-1">
-                        <label for="avatarInput" class="bg-primary hover:bg-red-600 text-white w-10 h-10 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition border-2 border-white dark:border-darker">
+                        <label for="avatarInput" class="bg-gradient-to-r from-primary to-red-700 dark:to-red-900 text-white w-10 h-10 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition border-2 border-white dark:border-darker">
                             <i class="fa-solid fa-camera"></i>
                         </label>
                         <input type="file" id="avatarInput" name="avatar" class="hidden" accept="image/*" onchange="document.getElementById('uploadAvatarBtn').click();">
@@ -115,9 +124,20 @@ include 'includes/header.php';
                     </form>
                 </div>
 
-                <h2 class="mt-4 text-3xl font-bold text-gray-900 dark:text-white tracking-wide transition-colors"><?= htmlspecialchars($full_name) ?></h2>
-                <div class="text-primary font-bold text-sm mt-2 bg-red-50 dark:bg-primary/10 px-4 py-1 rounded-full border border-red-200 dark:border-primary/20">
-                    Level <?= $user['level'] ?> <span class="text-gray-400 dark:text-zinc-500 mx-2">|</span> EXP <?= $user['exp'] ?>
+                <h2 class="mt-4 text-3xl font-bold text-gray-900 dark:text-white tracking-wide transition-colors"><?php echo htmlspecialchars($full_name); ?></h2>
+
+                <?php if ($active_title != ""): ?>
+                    <span class="mt-2 text-sm font-bold px-4 py-1 rounded-full bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-500/50 shadow-sm dark:shadow-[0_0_10px_currentColor] transition" style="color: <?php echo $active_title_color; ?>;">
+                        <?php echo htmlspecialchars($active_title); ?>
+                    </span>
+                <?php endif; ?>
+
+                <div class="text-primary font-bold text-sm mt-3 bg-red-50 dark:bg-primary/10 px-4 py-1 rounded-full border border-red-200 dark:border-primary/20 shadow-sm">
+                    LV. <?php echo $current_level; ?>
+                    <span class="text-gray-400 dark:text-zinc-500 mx-2">|</span>
+                    EXP <?php echo $current_exp; ?>
+                    <span class="text-gray-400 dark:text-zinc-500 mx-2">|</span>
+                    <span class="text-yellow-600 dark:text-yellow-500"><i class="fa-solid fa-coins"></i> <?php echo number_format($tokens); ?></span>
                 </div>
             </div>
 
@@ -125,27 +145,27 @@ include 'includes/header.php';
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-gray-600 dark:text-zinc-400 text-xs uppercase tracking-wider mb-2 font-bold transition-colors"><i class="fa-solid fa-user text-primary mr-1"></i> ชื่อ-นามสกุล</label>
-                        <input type="text" name="full_name" value="<?= htmlspecialchars($user['full_name']) ?>" required class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                        <input type="text" name="full_name" value="<?php echo htmlspecialchars($user['full_name']); ?>" required class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
                     </div>
                     <div>
                         <label class="block text-gray-600 dark:text-zinc-400 text-xs uppercase tracking-wider mb-2 font-bold transition-colors"><i class="fa-solid fa-cake-candles text-primary mr-1"></i> วันเกิด</label>
-                        <input type="date" name="birth_date" value="<?= $user['birth_date'] ?>" class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                        <input type="date" name="birth_date" value="<?php echo $user['birth_date']; ?>" class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
                     </div>
                     <div>
                         <label class="block text-gray-600 dark:text-zinc-400 text-xs uppercase tracking-wider mb-2 font-bold transition-colors"><i class="fa-solid fa-weight-scale text-primary mr-1"></i> น้ำหนัก (KG)</label>
-                        <input type="number" step="0.1" name="weight" value="<?= $user['weight'] ?>" class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                        <input type="number" step="0.1" name="weight" value="<?php echo $user['weight']; ?>" class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
                     </div>
                     <div>
                         <label class="block text-gray-600 dark:text-zinc-400 text-xs uppercase tracking-wider mb-2 font-bold transition-colors"><i class="fa-solid fa-ruler-vertical text-primary mr-1"></i> ส่วนสูง (CM)</label>
-                        <input type="number" step="0.1" name="height" value="<?= $user['height'] ?>" class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+                        <input type="number" step="0.1" name="height" value="<?php echo $user['height']; ?>" class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-gray-600 dark:text-zinc-400 text-xs uppercase tracking-wider mb-2 font-bold transition-colors"><i class="fa-solid fa-venus-mars text-primary mr-1"></i> เพศ</label>
                         <select name="gender" class="w-full bg-gray-50 dark:bg-darker border border-gray-300 dark:border-red-900/30 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none">
                             <option value="">เลือกเพศ</option>
-                            <option value="ชาย" <?= ($user['gender'] == "ชาย") ? 'selected' : '' ?>>ชาย</option>
-                            <option value="หญิง" <?= ($user['gender'] == "หญิง") ? 'selected' : '' ?>>หญิง</option>
-                            <option value="อื่นๆ" <?= ($user['gender'] == "อื่นๆ") ? 'selected' : '' ?>>อื่นๆ</option>
+                            <option value="ชาย" <?php echo ($user['gender'] == "ชาย") ? 'selected' : ''; ?>>ชาย</option>
+                            <option value="หญิง" <?php echo ($user['gender'] == "หญิง") ? 'selected' : ''; ?>>หญิง</option>
+                            <option value="อื่นๆ" <?php echo ($user['gender'] == "อื่นๆ") ? 'selected' : ''; ?>>อื่นๆ</option>
                         </select>
                     </div>
                 </div>
@@ -181,19 +201,21 @@ include 'includes/header.php';
             color: getSwalColor()
         }).then((result) => {
             if (result.isConfirmed) document.getElementById("profileForm").submit();
+
         });
     }
 
     <?php if (isset($_SESSION['success'])): ?>
         Swal.fire({
             title: 'สำเร็จ!',
-            text: '<?= $_SESSION['success'] ?>',
+            text: '<?php echo $_SESSION['success']; ?>',
             icon: 'success',
             timer: 2000,
             showConfirmButton: false,
             background: getSwalBg(),
             color: getSwalColor()
         });
+        <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
 </script>
 </body>

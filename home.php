@@ -177,7 +177,6 @@ $stmtHist->execute();
 $history_list = $stmtHist->get_result();
 
 // ===== เริ่มส่วน UI =====
-// ===== เริ่มส่วน UI =====
 $page_title = "หน้าแรก - Gymfitt";
 include 'includes/header.php';
 ?>
@@ -268,9 +267,20 @@ include 'includes/header.php';
                             <div class="flex items-center gap-3 bg-gray-50 dark:bg-darker p-3 rounded-2xl border border-gray-100 dark:border-red-900/20 hover:border-primary/50 transition cursor-pointer group">
                                 <div class="w-12 h-12 rounded-xl overflow-hidden bg-gray-200 dark:bg-zinc-900 shrink-0">
                                     <?php
-                                    $img = $h['display_image'];
-                                    $imgPath = "uploads/exercises/" . $img;
-                                    if (empty($img) || !file_exists($imgPath)) $imgPath = "assets/images/no-image.png";
+                                    // ตรวจสอบว่าเป็นรูปภารกิจ หรือรูปท่าฝึกซ้อม
+                                    $img_name = basename($h['display_image']);
+                                    $is_mission = ($h['mission_id'] > 0);
+                                    $imgPath = "assets/images/no-image.png"; // รูปพื้นฐานถ้าหาไม่เจอ
+
+                                    if (!empty($img_name)) {
+                                        if ($is_mission && file_exists("uploads/missions/" . $img_name)) {
+                                            $imgPath = "uploads/missions/" . $img_name;
+                                        } elseif (!$is_mission && file_exists("uploads/exercises/" . $img_name)) {
+                                            $imgPath = "uploads/exercises/" . $img_name;
+                                        } elseif (file_exists("uploads/" . $img_name)) {
+                                            $imgPath = "uploads/" . $img_name;
+                                        }
+                                    }
                                     ?>
                                     <img src="<?php echo $imgPath; ?>" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition">
                                 </div>
@@ -281,11 +291,18 @@ include 'includes/header.php';
                                 <div class="text-right">
                                     <span class="text-xs font-bold <?php echo ($h['accuracy'] >= 70) ? 'text-green-500' : 'text-primary'; ?>"><?php echo $h['accuracy']; ?>%</span>
                                 </div>
+
                             </div>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <div class="text-center py-8 text-gray-500 dark:text-zinc-500 text-sm">ยังไม่มีประวัติการออกกำลังกาย</div>
                     <?php endif; ?>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
+                    <a href="history.php" class="block w-full text-center bg-gray-50 dark:bg-darker hover:bg-gray-100 dark:hover:bg-zinc-800 border border-gray-200 dark:border-red-900/30 text-gray-700 dark:text-zinc-300 py-2.5 rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-list-ul mr-2"></i> ดูประวัติทั้งหมด
+                    </a>
                 </div>
             </div>
         </div>
@@ -293,7 +310,6 @@ include 'includes/header.php';
         <div class="lg:col-span-2 space-y-8">
 
             <div>
-                <!-- แก้ไขหัวข้อให้อ่านออกชัดเจนบนพื้นหลังสีดำ -->
                 <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 drop-shadow-md">
                     <i class="fa-solid fa-fire text-primary"></i> ภารกิจประจำวัน
                 </h3>
@@ -324,8 +340,15 @@ include 'includes/header.php';
                                     </div>
                                 <?php endif; ?>
                                 <?php
-                                $m_img = "uploads/missions/" . $m['mission_image'];
-                                if (empty($m['mission_image']) || !file_exists($m_img)) $m_img = "assets/images/no-image.png";
+                                $m_img_name = basename($m['mission_image']);
+                                $m_img = "assets/images/no-image.png";
+                                if (!empty($m_img_name)) {
+                                    if (file_exists("uploads/missions/" . $m_img_name)) {
+                                        $m_img = "uploads/missions/" . $m_img_name;
+                                    } elseif (file_exists("uploads/" . $m_img_name)) {
+                                        $m_img = "uploads/" . $m_img_name;
+                                    }
+                                }
                                 ?>
                                 <img src="<?php echo $m_img; ?>" class="w-full h-full object-cover opacity-80 dark:opacity-70 <?php echo $is_locked ? 'grayscale' : 'group-hover:opacity-100 group-hover:scale-110'; ?> transition duration-500">
                             </div>
@@ -340,7 +363,6 @@ include 'includes/header.php';
             </div>
 
             <div>
-                <!-- แก้ไขหัวข้อให้อ่านออกชัดเจนบนพื้นหลังสีดำ -->
                 <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 drop-shadow-md">
                     <i class="fa-solid fa-fire text-primary"></i> ท่าออกกำลังกาย
                 </h3>
@@ -348,8 +370,15 @@ include 'includes/header.php';
                     <?php
                     $ex_query = $conn->query("SELECT * FROM exercises ORDER BY exercise_id DESC");
                     while ($ex = $ex_query->fetch_assoc()):
-                        $ex_img = "uploads/exercises/" . $ex['exercise_image'];
-                        if (empty($ex['exercise_image']) || !file_exists($ex_img)) $ex_img = "assets/images/no-image.png";
+                        $ex_img_name = basename($ex['exercise_image']);
+                        $ex_img = "assets/images/no-image.png";
+                        if (!empty($ex_img_name)) {
+                            if (file_exists("uploads/exercises/" . $ex_img_name)) {
+                                $ex_img = "uploads/exercises/" . $ex_img_name;
+                            } elseif (file_exists("uploads/" . $ex_img_name)) {
+                                $ex_img = "uploads/" . $ex_img_name;
+                            }
+                        }
                     ?>
                         <div class="bg-gray-50 dark:bg-darker rounded-2xl border border-gray-200 dark:border-zinc-800 hover:border-primary/50 dark:hover:border-white/50 cursor-pointer transition duration-300 flex items-center p-3 gap-4 group" onclick="window.location.href='play_exercise.php?id=<?php echo $ex['exercise_id']; ?>'">
                             <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-200 dark:bg-zinc-900 shrink-0 border border-gray-300 dark:border-zinc-700 group-hover:border-primary dark:group-hover:border-white transition">

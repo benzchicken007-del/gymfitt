@@ -98,8 +98,8 @@ if (isset($_POST['update_exercise'])) {
 
     <style>
         :root {
-            --primary: #38bdf8;
-            --primary-hover: #0284c7;
+            --primary: #ef4444;
+            --primary-hover: #dc2626;
             --bg-dark: #0f111a;
             --card-glass: rgba(255, 255, 255, 0.03);
             --border-glass: rgba(255, 255, 255, 0.08);
@@ -122,7 +122,7 @@ if (isset($_POST['update_exercise'])) {
             font-weight: 700;
             font-size: 28px;
             color: var(--primary);
-            text-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+            text-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
         }
 
         .main-container {
@@ -191,6 +191,7 @@ if (isset($_POST['update_exercise'])) {
             outline: none;
             border-color: var(--primary);
             background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
         }
 
         .camera-container {
@@ -208,7 +209,7 @@ if (isset($_POST['update_exercise'])) {
             border-radius: 20px;
             overflow: hidden;
             border: 2px solid var(--primary);
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.15);
         }
 
         video,
@@ -242,6 +243,7 @@ if (isset($_POST['update_exercise'])) {
         .btn:hover {
             background: var(--primary-hover);
             transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
         }
 
         .btn-success {
@@ -250,6 +252,7 @@ if (isset($_POST['update_exercise'])) {
 
         .btn-success:hover {
             background: #059669;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
         }
 
         .steps-grid {
@@ -348,13 +351,13 @@ if (isset($_POST['update_exercise'])) {
                     <div class="steps-grid" id="steps_preview"></div>
 
                     <div style="width: 100%; margin-top: 25px;">
-                        <button type="button" class="btn" id="btn_record" onclick="startCapturing()" style="margin-bottom: 10px; background: #fbbf24; color: black;">
-                            <i class="fa-solid fa-rotate-right"></i> อัดท่าทางใหม่ (Re-Record)
+                        <button type="button" class="btn" id="btn_record" onclick="startCapturing()" style="margin-bottom: 10px;">
+                            <i class="fa-solid fa-record-vinyl"></i> เริ่มบันทึกสเต็ปอัตโนมัติ
                         </button>
                         <button type="submit" name="update_exercise" class="btn btn-success" id="btn_save">
                             <i class="fa-solid fa-save"></i> บันทึกการแก้ไข
                         </button>
-                        <a href="dashboard.php" class="btn" style="background: rgba(255,255,255,0.1); margin-top: 10px;">ยกเลิก</a>
+                        <a href="dashboard.php" class="btn" style="background: #64748b; margin-top: 10px;">ยกเลิก</a>
                     </div>
                 </div>
             </div>
@@ -398,36 +401,57 @@ if (isset($_POST['update_exercise'])) {
         }
 
         function startCapturing() {
-            capIdx = 1; // Reset
-            initSteps(false); // Clear old data
-            document.getElementById('btn_record').disabled = true;
-            document.getElementById('btn_record').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
+            if (capIdx > totalSteps) capIdx = 1;
+            const btn = document.getElementById('btn_record');
+            btn.disabled = true;
+            initSteps(false);
 
-            let timer = setInterval(() => {
-                document.getElementById('tpl_' + capIdx).value = JSON.stringify(lastData);
-                let box = document.getElementById('step_box_' + capIdx);
-                box.classList.add('done');
-                document.getElementById('st_' + capIdx).innerHTML = '<i class="fa-solid fa-check"></i>';
-
-                capIdx++;
-
+            function captureNext() {
                 if (capIdx > totalSteps) {
-                    clearInterval(timer);
-                    document.getElementById('btn_record').innerHTML = '<i class="fa-solid fa-rotate-right"></i> อัดท่าทางใหม่';
-                    document.getElementById('btn_record').disabled = false;
-                    Swal.fire({
-                        title: 'สำเร็จ!',
-                        text: 'อัดท่าทางใหม่ครบถ้วน',
-                        icon: 'success',
-                        background: '#1e2235',
-                        color: '#fff'
-                    });
-                } else {
-                    document.getElementById('step_box_' + capIdx).classList.add('active');
+                    finishCapturing();
+                    return;
                 }
-            }, 2500);
 
-            document.getElementById('step_box_' + capIdx).classList.add('active');
+                let countdown = 3;
+                document.getElementById('step_box_' + capIdx).classList.add('active');
+
+                let timer = setInterval(() => {
+                    if (countdown > 0) {
+                        btn.innerHTML = `<i class="fa-solid fa-clock"></i> Step ${capIdx}: เตรียมตัว... ${countdown}`;
+                        countdown--;
+                    } else {
+                        clearInterval(timer);
+                        btn.innerHTML = `<i class="fa-solid fa-video"></i> กำลังบันทึก Step ${capIdx}...`;
+                        btn.style.background = "#dc2626";
+
+                        document.getElementById('tpl_' + capIdx).value = JSON.stringify(lastData);
+
+                        let box = document.getElementById('step_box_' + capIdx);
+                        box.classList.remove('active');
+                        box.classList.add('done');
+                        document.getElementById('st_' + capIdx).innerHTML = '<i class="fa-solid fa-check"></i>';
+
+                        capIdx++;
+                        setTimeout(captureNext, 1000);
+                    }
+                }, 1000);
+            }
+
+            function finishCapturing() {
+                btn.disabled = false;
+                btn.style.background = "";
+                btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> อัดท่าทางใหม่ (Re-Record)';
+                Swal.fire({
+                    title: 'บันทึกสำเร็จ!',
+                    text: 'จับท่าทางใหม่ครบถ้วนแล้ว',
+                    icon: 'success',
+                    background: '#1e2235',
+                    color: '#fff',
+                    confirmButtonColor: '#10b981'
+                });
+            }
+
+            captureNext();
         }
 
         function startCamera() {

@@ -268,6 +268,8 @@ if (isset($_POST['save_exercise'])) {
 
     <h1 class="header-title"><i class="fa-solid fa-person-walking"></i> เพิ่มท่าออกกำลังกายใหม่</h1>
 
+
+
     <form method="POST" enctype="multipart/form-data">
         <div class="main-container">
 
@@ -339,6 +341,9 @@ if (isset($_POST['save_exercise'])) {
                         <button type="button" class="btn" id="btn_record" onclick="startCapturing()" style="display:none;">
                             <i class="fa-solid fa-record-vinyl"></i> เริ่มบันทึกสเต็ปอัตโนมัติ
                         </button>
+                        <button type="button" class="btn" id="btn_reset" onclick="location.reload()" style="display:none; background: #64748b;">
+                            <i class="fa-solid fa-rotate-right"></i> เริ่มบันทึกใหม่
+                        </button>
                         <button type="submit" name="save_exercise" class="btn btn-success" id="btn_save" style="display:none;">
                             <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกท่าลงฐานข้อมูล
                         </button>
@@ -349,49 +354,74 @@ if (isset($_POST['save_exercise'])) {
         </div>
     </form>
 
-    <script>
-        let totalSteps = 0,
-            capIdx = 1,
-            lastData = {};
+    <button onclick="window.location='dashboard.php'" class="btn" style="max-width: 200px; margin: 30px auto; display: block;">
+        <i class="fa-solid fa-arrow-left"></i> กลับ
 
-        function initSteps() {
-            totalSteps = parseInt(document.getElementById('total_steps').value);
-            if (totalSteps > 0) {
-                document.getElementById('cam-area').style.display = "flex";
-                document.getElementById('btn_record').style.display = "flex";
-                let preview = document.getElementById('steps_preview');
-                preview.innerHTML = "";
-                for (let i = 1; i <= totalSteps; i++) {
-                    preview.innerHTML += `
+        <script>
+            let totalSteps = 0,
+                capIdx = 1,
+                lastData = {};
+
+            function initSteps() {
+                totalSteps = parseInt(document.getElementById('total_steps').value);
+                if (totalSteps > 0) {
+                    document.getElementById('cam-area').style.display = "flex";
+                    document.getElementById('btn_record').style.display = "flex";
+                    let preview = document.getElementById('steps_preview');
+                    preview.innerHTML = "";
+                    for (let i = 1; i <= totalSteps; i++) {
+                        preview.innerHTML += `
                         <div class="mini-step" id="step_box_${i}">
                             <b>Step ${i}</b><br>
                             <span id="st_${i}"><i class="fa-solid fa-hourglass-half"></i></span>
                             <input type="hidden" name="angle_template_${i}" id="tpl_${i}">
                         </div>`;
+                    }
+                    startCamera();
                 }
-                startCamera();
             }
-        }
 
-        function startCapturing() {
-            if (capIdx > totalSteps) return;
-            document.getElementById('btn_record').disabled = true;
-            document.getElementById('btn_record').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
+            function startCapturing() {
+                if (capIdx > totalSteps) return;
+                const btn = document.getElementById('btn_record');
+                btn.disabled = true;
 
-            let timer = setInterval(() => {
-                // บันทึกข้อมูล
-                document.getElementById('tpl_' + capIdx).value = JSON.stringify(lastData);
+                function captureNext() {
+                    if (capIdx > totalSteps) {
+                        finishCapturing();
+                        return;
+                    }
 
-                // อัปเดต UI
-                let box = document.getElementById('step_box_' + capIdx);
-                box.classList.add('done');
-                document.getElementById('st_' + capIdx).innerHTML = '<i class="fa-solid fa-check"></i>';
+                    let countdown = 3;
+                    document.getElementById('step_box_' + capIdx).classList.add('active');
 
-                capIdx++;
+                    let timer = setInterval(() => {
+                        if (countdown > 0) {
+                            btn.innerHTML = `<i class="fa-solid fa-clock"></i> Step ${capIdx}: เตรียมตัว... ${countdown}`;
+                            countdown--;
+                        } else {
+                            clearInterval(timer);
+                            // บันทึกข้อมูล
+                            btn.innerHTML = `<i class="fa-solid fa-video"></i> กำลังบันทึก Step ${capIdx}...`;
+                            btn.style.background = "#dc2626";
 
-                if (capIdx > totalSteps) {
-                    clearInterval(timer);
-                    document.getElementById('btn_record').style.display = "none";
+                            document.getElementById('tpl_' + capIdx).value = JSON.stringify(lastData);
+
+                            // อัปเดต UI
+                            let box = document.getElementById('step_box_' + capIdx);
+                            box.classList.remove('active');
+                            box.classList.add('done');
+                            document.getElementById('st_' + capIdx).innerHTML = '<i class="fa-solid fa-check"></i>';
+
+                            capIdx++;
+                            setTimeout(captureNext, 1000); // เว้นระยะ 1 วินาทีก่อนเริ่มสเต็ปถัดไป
+                        }
+                    }, 1000);
+                }
+
+                function finishCapturing() {
+                    btn.style.display = "none";
+                    document.getElementById('btn_reset').style.display = "flex";
                     document.getElementById('btn_save').style.display = "flex";
                     Swal.fire({
                         title: 'บันทึกสำเร็จ!',
@@ -401,92 +431,89 @@ if (isset($_POST['save_exercise'])) {
                         color: '#fff',
                         confirmButtonColor: '#10b981'
                     });
-                } else {
-                    document.getElementById('step_box_' + capIdx).classList.add('active');
                 }
-            }, 2500); // แคปเจอร์ทุก 2.5 วินาที
 
-            document.getElementById('step_box_' + capIdx).classList.add('active');
-        }
+                captureNext();
+            }
 
-        function startCamera() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
+            function startCamera() {
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
 
-            const pose = new Pose({
-                locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-            });
-            pose.setOptions({
-                modelComplexity: 1,
-                smoothLandmarks: true,
-                minDetectionConfidence: 0.6
-            });
+                const pose = new Pose({
+                    locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+                });
+                pose.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    minDetectionConfidence: 0.6
+                });
 
-            pose.onResults(results => {
-                // ดึงขนาดความกว้าง/ยาว ของวิดีโอมาปรับให้ canvas ทับพอดี
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                pose.onResults(results => {
+                    // ดึงขนาดความกว้าง/ยาว ของวิดีโอมาปรับให้ canvas ทับพอดี
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
 
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                // ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height); // ปิดไม่วาดภาพซ้ำเพื่อความลื่น
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    // ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height); // ปิดไม่วาดภาพซ้ำเพื่อความลื่น
 
-                if (results.poseLandmarks) {
-                    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
-                        color: '#00f2ff',
-                        lineWidth: 4
-                    });
-                    drawLandmarks(ctx, results.poseLandmarks, {
-                        color: '#ffffff',
-                        fillColor: '#ef4444',
-                        radius: 4
-                    });
+                    if (results.poseLandmarks) {
+                        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
+                            color: '#00f2ff',
+                            lineWidth: 4
+                        });
+                        drawLandmarks(ctx, results.poseLandmarks, {
+                            color: '#ffffff',
+                            fillColor: '#ef4444',
+                            radius: 4
+                        });
 
-                    const lm = results.poseLandmarks;
-                    lastData = {
-                        angles: {
-                            le: calc(lm[11], lm[13], lm[15]),
-                            re: calc(lm[12], lm[14], lm[16]),
-                            lk: calc(lm[23], lm[25], lm[27]),
-                            rk: calc(lm[24], lm[26], lm[28])
-                        },
-                        heights: {
-                            lw_y: (lm[15].y - lm[11].y).toFixed(3),
-                            rw_y: (lm[16].y - lm[12].y).toFixed(3)
-                        }
-                    };
-                }
-            });
+                        const lm = results.poseLandmarks;
+                        lastData = {
+                            angles: {
+                                le: calc(lm[11], lm[13], lm[15]),
+                                re: calc(lm[12], lm[14], lm[16]),
+                                lk: calc(lm[23], lm[25], lm[27]),
+                                rk: calc(lm[24], lm[26], lm[28])
+                            },
+                            heights: {
+                                lw_y: (lm[15].y - lm[11].y).toFixed(3),
+                                rw_y: (lm[16].y - lm[12].y).toFixed(3)
+                            }
+                        };
+                    }
+                });
 
-            // ตั้งค่าความละเอียดแนวตั้งให้ MediaPipe ขอจากกล้อง
-            new Camera(video, {
-                onFrame: async () => {
-                    await pose.send({
-                        image: video
-                    });
-                },
-                width: 720,
-                height: 1280
-            }).start();
-        }
+                // ตั้งค่าความละเอียดแนวตั้งให้ MediaPipe ขอจากกล้อง
+                new Camera(video, {
+                    onFrame: async () => {
+                        await pose.send({
+                            image: video
+                        });
+                    },
+                    width: 720,
+                    height: 1280
+                }).start();
+            }
 
-        function calc(a, b, c) {
-            let r = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-            let ang = Math.abs(r * 180.0 / Math.PI);
-            return ang > 180 ? 360 - ang : ang;
-        }
+            function calc(a, b, c) {
+                let r = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+                let ang = Math.abs(r * 180.0 / Math.PI);
+                return ang > 180 ? 360 - ang : ang;
+            }
 
-        <?php if ($success_msg): ?>
-            Swal.fire({
-                title: 'สำเร็จ!',
-                text: 'เพิ่มท่าออกกำลังกายเรียบร้อย',
-                icon: 'success',
-                background: '#1e2235',
-                color: '#fff',
-                confirmButtonColor: '#10b981'
-            }).then(() => window.location = 'dashboard.php');
-        <?php endif; ?>
-    </script>
+            <?php if ($success_msg): ?>
+                Swal.fire({
+                    title: 'สำเร็จ!',
+                    text: 'เพิ่มท่าออกกำลังกายเรียบร้อย',
+                    icon: 'success',
+                    background: '#1e2235',
+                    color: '#fff',
+                    confirmButtonColor: '#10b981'
+                }).then(() => window.location = 'dashboard.php');
+            <?php endif; ?>
+        </script>
 </body>
 
 </html>
