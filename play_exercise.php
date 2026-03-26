@@ -367,34 +367,58 @@ if ($mission_id) {
             return angle > 180 ? 360 - angle : angle;
         }
 
-        // ฟังก์ชันคำนวณความแม่นยำเทียบกับ Template
+        // ฟังก์ชันคำนวณความแม่นยำ (เวอร์ชันเพิ่มความเข้มงวด/โหดขึ้น)
+        // ฟังก์ชันคำนวณความแม่นยำเทียบกับ Template (อิงจากระบบเก่า 12 จุด)
         function calculateSimilarity(current, targetTemplateJson) {
             if (!targetTemplateJson) return 0;
             const target = JSON.parse(targetTemplateJson);
+
+            // 1. ดึงค่าองศาจาก JSON
             const tA = target.angles || {
                 le: 0,
                 re: 0,
+                ls: 0,
+                rs: 0,
                 lk: 0,
-                rk: 0
+                rk: 0,
+                lh: 0,
+                rh: 0
             };
 
             const angleDiffs = [
-                Math.abs(current.le - (tA.le || 0)), Math.abs(current.re - (tA.re || 0)),
-                Math.abs(current.lk - (tA.lk || 0)), Math.abs(current.rk - (tA.rk || 0))
+                Math.abs(current.le - (tA.le || 0)),
+                Math.abs(current.re - (tA.re || 0)),
+                Math.abs(current.ls - (tA.ls || 0)),
+                Math.abs(current.rs - (tA.rs || 0)),
+                Math.abs(current.lk - (tA.lk || 0)),
+                Math.abs(current.rk - (tA.rk || 0)),
+                Math.abs(current.lh - (tA.lh || 0)),
+                Math.abs(current.rh - (tA.rh || 0))
             ];
 
-            // ถ้ารองรับการเช็คมุมไหล่และสะโพกเพิ่มเติม
-            if (tA.ls !== undefined && tA.rs !== undefined && tA.lh !== undefined && tA.rh !== undefined) {
-                angleDiffs.push(Math.abs(current.ls - tA.ls));
-                angleDiffs.push(Math.abs(current.rs - tA.rs));
-                angleDiffs.push(Math.abs(current.lh - tA.lh));
-                angleDiffs.push(Math.abs(current.rh - tA.rh));
-            }
-
             let angleScore = 100 - (angleDiffs.reduce((a, b) => a + b) / angleDiffs.length);
-            return Math.round(Math.max(0, Math.min(100, angleScore)));
-        }
 
+            // 2. คำนวณพิกัดความสูง (Heights) ของมือและเท้า
+            const tH = target.heights || {
+                lw_y: 0,
+                rw_y: 0,
+                la_y: 0,
+                ra_y: 0
+            };
+
+            const hDiffs = [
+                Math.abs(current.lw_y - (tH.lw_y || 0)),
+                Math.abs(current.rw_y - (tH.rw_y || 0)),
+                Math.abs(current.la_y - (tH.la_y || 0)),
+                Math.abs(current.ra_y - (tH.ra_y || 0))
+            ];
+
+            let heightScore = 100 - (hDiffs.reduce((a, b) => a + b) / hDiffs.length * 200);
+
+            // 3. ถ่วงน้ำหนักคะแนน (มุม 70% + พิกัดความสูง 30%)
+            let finalScore = (angleScore * 0.7) + (Math.max(0, heightScore) * 0.3);
+            return Math.round(Math.max(0, Math.min(100, finalScore)));
+        }
         // ฟังก์ชันประมวลผล Pose (ถูกเรียกทุก Frame)
         function onResults(results) {
             // วาดรูปพื้นหลัง
@@ -417,14 +441,18 @@ if ($mission_id) {
 
                 const lm = results.poseLandmarks;
                 const currentData = {
-                    le: calculateAngle(lm[11], lm[13], lm[15]),
-                    re: calculateAngle(lm[12], lm[14], lm[16]),
-                    ls: calculateAngle(lm[13], lm[11], lm[23]),
-                    rs: calculateAngle(lm[14], lm[12], lm[24]),
-                    lk: calculateAngle(lm[23], lm[25], lm[27]),
-                    rk: calculateAngle(lm[24], lm[26], lm[28]),
-                    lh: calculateAngle(lm[25], lm[23], lm[11]),
-                    rh: calculateAngle(lm[26], lm[24], lm[12])
+                    le: calculateAngle(lm[11], lm[13], lm[15]), // ศอกซ้าย
+                    re: calculateAngle(lm[12], lm[14], lm[16]), // ศอกขวา
+                    ls: calculateAngle(lm[13], lm[11], lm[23]), // ไหล่ซ้าย
+                    rs: calculateAngle(lm[14], lm[12], lm[24]), // ไหล่ขวา
+                    lk: calculateAngle(lm[23], lm[25], lm[27]), // เข่าซ้าย
+                    rk: calculateAngle(lm[24], lm[26], lm[28]), // เข่าขวา
+                    lh: calculateAngle(lm[25], lm[23], lm[11]), // สะโพกซ้าย
+                    rh: calculateAngle(lm[26], lm[24], lm[12]), // สะโพกขวา
+                    lw_y: lm[15].y - lm[11].y, // ข้อมือซ้าย (จับความสูง)
+                    rw_y: lm[16].y - lm[12].y, // ข้อมือขวา (จับความสูง)
+                    la_y: lm[27].y - lm[23].y, // ข้อเท้าซ้าย (จับความสูง)
+                    ra_y: lm[28].y - lm[24].y // ข้อเท้าขวา (จับความสูง)
                 };
 
                 // เทียบความแม่นยำกับสเต็ปปัจจุบัน

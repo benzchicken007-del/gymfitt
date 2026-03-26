@@ -14,11 +14,10 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 // รับค่าทั้งหมดจากฝั่งหน้าจอ
-$mission_id = isset($_POST['mission_id']) ? (int)$_POST['mission_id'] : (isset($_GET['mission_id']) ? (int)$_GET['mission_id'] : 0);
-$exercise_id = isset($_POST['exercise_id']) ? (int)$_POST['exercise_id'] : (isset($_GET['exercise_id']) ? (int)$_GET['exercise_id'] : 0);
-$accuracy = isset($_POST['accuracy']) ? (int)$_POST['accuracy'] : (isset($_GET['accuracy']) ? (int)$_GET['accuracy'] : 0);
-$passed = isset($_POST['passed']) ? filter_var($_POST['passed'], FILTER_VALIDATE_BOOLEAN) : (isset($_GET['passed']) ? filter_var($_GET['passed'], FILTER_VALIDATE_BOOLEAN) : false);
-
+$mission_id = isset($_POST['mission_id']) ? (int)$_POST['mission_id'] : 0;
+$exercise_id = isset($_POST['exercise_id']) ? (int)$_POST['exercise_id'] : 0;
+$accuracy = isset($_POST['accuracy']) ? (int)$_POST['accuracy'] : 0;
+$passed = isset($_POST['passed']) ? filter_var($_POST['passed'], FILTER_VALIDATE_BOOLEAN) : false;
 // ถ้าไม่ได้ทำสำเร็จจริงให้เด้งออก
 if (!$passed) {
     echo json_encode(["error" => "not_passed"]);

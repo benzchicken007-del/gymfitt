@@ -25,7 +25,3 @@ if ($conn->connect_error) {
 
 // 6. ตั้งค่า charset ให้รองรับภาษาไทย (ต้องมีบรรทัดนี้เสมอเพื่อป้องกันภาษาต่างดาว)
 $conn->set_charset("utf8mb4");
-
-// 7. บังคับการแสดงผลเวลา query ให้เป็น utf8mb4 อีกชั้นเพื่อความชัวร์
-$conn->query("SET NAMES utf8mb4");
-$conn->query("SET CHARACTER SET utf8mb4");

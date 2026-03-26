@@ -319,8 +319,20 @@ include 'includes/header.php';
                         $done = (int)$m['today_play_count'];
                         $is_locked = ($done >= $limit);
                         $bg_class = $is_locked ? 'border-gray-200 dark:border-zinc-800 opacity-60' : 'border-gray-200 dark:border-red-900/40 hover:border-primary dark:hover:border-primary shadow-lg';
+
+                        // คำนวณ Path รูปภาพให้ถูกต้องก่อนส่งเข้า Modal
+                        $m_img_name = basename($m['mission_image']);
+                        $m_img = "assets/images/no-image.png";
+                        if (!empty($m_img_name)) {
+                            if (file_exists("uploads/missions/" . $m_img_name)) {
+                                $m_img = "uploads/missions/" . $m_img_name;
+                            } elseif (file_exists("uploads/" . $m_img_name)) {
+                                $m_img = "uploads/" . $m_img_name;
+                            }
+                        }
+                        $m['final_image'] = $m_img;
                     ?>
-                        <div class="bg-white dark:bg-card rounded-2xl border <?php echo $bg_class; ?> cursor-pointer hover:-translate-y-1 transition duration-300 relative overflow-hidden group" onclick='<?php echo $is_locked ? "" : "openMissionModal(" . json_encode($m) . ")"; ?>'>
+                        <div class="bg-white dark:bg-card rounded-2xl border <?php echo $bg_class; ?> cursor-pointer hover:-translate-y-1 transition duration-300 relative overflow-hidden group" onclick='<?php echo $is_locked ? "" : "openMissionModal(" . htmlspecialchars(json_encode($m), ENT_QUOTES, "UTF-8") . ")"; ?>'>
 
                             <div class="absolute top-3 left-3 flex gap-2 z-20">
                                 <span class="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded shadow-md">+<?php echo $m['exp_reward']; ?> XP</span>
@@ -339,20 +351,8 @@ include 'includes/header.php';
                                         <div class="bg-white text-black font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-check"></i> สำเร็จแล้ว</div>
                                     </div>
                                 <?php endif; ?>
-                                <?php
-                                $m_img_name = basename($m['mission_image']);
-                                $m_img = "assets/images/no-image.png";
-                                if (!empty($m_img_name)) {
-                                    if (file_exists("uploads/missions/" . $m_img_name)) {
-                                        $m_img = "uploads/missions/" . $m_img_name;
-                                    } elseif (file_exists("uploads/" . $m_img_name)) {
-                                        $m_img = "uploads/" . $m_img_name;
-                                    }
-                                }
-                                ?>
-                                <img src="<?php echo $m_img; ?>" class="w-full h-full object-cover opacity-80 dark:opacity-70 <?php echo $is_locked ? 'grayscale' : 'group-hover:opacity-100 group-hover:scale-110'; ?> transition duration-500">
+                                <img src="<?php echo $m['final_image']; ?>" class="w-full h-full object-cover opacity-80 dark:opacity-70 <?php echo $is_locked ? 'grayscale' : 'group-hover:opacity-100 group-hover:scale-110'; ?> transition duration-500">
                             </div>
-
                             <div class="p-4 relative z-20 bg-gradient-to-t from-white dark:from-card via-white dark:via-card to-transparent -mt-10 pt-10 transition-colors">
                                 <h4 class="font-bold text-gray-900 dark:text-white text-lg truncate transition-colors"><?php echo htmlspecialchars($m['mission_name']); ?></h4>
                                 <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-1 transition-colors"><?php echo htmlspecialchars($m['mission_detail']); ?></p>
@@ -504,9 +504,9 @@ include 'includes/header.php';
         document.getElementById('modalProgress').innerText = `${done}/${limit}`;
 
         const media = document.getElementById('modalMedia');
-        if (m.mission_image) {
-            let path = "uploads/missions/" + m.mission_image;
-            let ext = m.mission_image.split('.').pop().toLowerCase();
+        if (m.final_image && m.final_image !== "assets/images/no-image.png") {
+            let path = m.final_image;
+            let ext = path.split('.').pop().toLowerCase();
             media.innerHTML = (['mp4', 'webm'].includes(ext)) ?
                 `<video src="${path}" autoplay muted loop class="w-full h-full object-cover"></video>` :
                 `<img src='${path}' class="w-full h-full object-cover">`;

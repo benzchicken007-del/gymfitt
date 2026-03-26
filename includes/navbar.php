@@ -29,6 +29,10 @@
                 <a href="profile.php" class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-[0_0_10px_rgba(220,38,38,0.5)] transition transform hover:scale-110 block bg-zinc-200">
                     <img src="<?php echo isset($profile_pic) ? $profile_pic : 'https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=dc2626&textColor=ffffff'; ?>" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=dc2626&textColor=ffffff';" alt="Profile" class="w-full h-full object-cover">
                 </a>
+
+                <a href="logout.php" class="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-primary hover:bg-primary hover:text-white transition border border-red-200 dark:border-red-900/50" title="ออกจากระบบ">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
             </div>
 
         </div>

@@ -325,38 +325,38 @@ if (count($mission_queue) == 0) {
             document.getElementById('textTooHigh').innerText = ex.msg_too_high ? ex.msg_too_high : '';
             document.getElementById('textTooLow').innerText = ex.msg_too_low ? ex.msg_too_low : '';
 
-            // อัปเดตสื่อสาธิต (div1, div2)
+            // --- แก้ไขจุดที่ 1: จัดการการแสดงผลสื่อสาธิตแยกกัน (รูป/วิดีโอ) ---
             let imgContainer = document.getElementById('demoImgContainer');
             let vidContainer = document.getElementById('demoVideoContainer');
 
-            let file = ex.exercise_video ? ex.exercise_video : ex.exercise_image;
-            if (file) {
-                let filename = file.split('/').pop().split('\\').pop();
-                let ext = filename.split('.').pop().toLowerCase();
-
-                // อัปเดตวิดีโอ (ถ้ามี)
+            // 1. จัดการวิดีโอ
+            if (ex.exercise_video && ex.exercise_video.trim() !== '') {
+                let vidName = ex.exercise_video.split('/').pop().split('\\').pop();
+                let ext = vidName.split('.').pop().toLowerCase();
                 if (['mp4', 'webm', 'mov'].includes(ext)) {
                     vidContainer.innerHTML = `
-                <video class="demo-video" controls loop muted playsinline autoplay>
-                    <source src="uploads/exercises/${filename}" type="video/${ext}">
-                    <source src="uploads/${filename}" type="video/${ext}">
-                </video>`;
-
-                    // เอารูปไปใส่ที่ div1 แทน (ถ้าระบบมีรูปประกอบแยกก็ดึงมาใส่)
-                    let imgFile = ex.exercise_image ? ex.exercise_image.split('/').pop().split('\\').pop() : filename;
-                    imgContainer.innerHTML = `<img src="uploads/exercises/${imgFile}" onerror="this.src='uploads/${imgFile}'; this.onerror=null; this.src='assets/images/no-image.png'" class="demo-img object-contain" alt="Exercise">`;
+                    <video class="demo-video" controls loop muted playsinline autoplay>
+                        <source src="uploads/exercises/${vidName}" type="video/${ext}">
+                        <source src="uploads/${vidName}" type="video/${ext}">
+                    </video>`;
                 } else {
-                    // ถ้าเป็นรูปอย่างเดียว ใส่รูปทั้งสองที่ (หรือใส่คลิป placeholder)
-                    imgContainer.innerHTML = `<img src="uploads/exercises/${filename}" onerror="this.src='uploads/${filename}'; this.onerror=null; this.src='assets/images/no-image.png'" class="demo-img object-contain" alt="Exercise">`;
-                    vidContainer.innerHTML = `
+                    vidContainer.innerHTML = '<span class="text-gray-500 italic">รูปแบบวิดีโอไม่ถูกต้อง</span>';
+                }
+            } else {
+                vidContainer.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2 opacity-50 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg><span class="text-gray-500 italic">ไม่มีวิดีโอสาธิต</span>`;
-                }
-            } else {
-                imgContainer.innerHTML = '<span class="text-gray-500 italic">ไม่มีรูปตัวอย่าง</span>';
-                vidContainer.innerHTML = '<span class="text-gray-500 italic">ไม่มีวิดีโอสาธิต</span>';
             }
+
+            // 2. จัดการรูปภาพ (ดักจับ Error กรณีไฟล์หายให้แสดง no-image.png)
+            if (ex.exercise_image && ex.exercise_image.trim() !== '') {
+                let imgName = ex.exercise_image.split('/').pop().split('\\').pop();
+                imgContainer.innerHTML = `<img src="uploads/exercises/${imgName}" onerror="this.onerror=null; this.src='uploads/${imgName}'; setTimeout(()=>{if(this.naturalWidth === 0) this.src='assets/images/no-image.png';}, 50);" class="demo-img object-contain" alt="Exercise">`;
+            } else {
+                imgContainer.innerHTML = `<img src="assets/images/no-image.png" class="demo-img object-contain" alt="ไม่มีรูปภาพ">`;
+            }
+            // -----------------------------------------------------------
 
             // อัปเดตตัวเลขการนับ (div3 overlay)
             document.getElementById('uiEx').innerText = `${qIdx + 1}/${queue.length}`;
@@ -364,13 +364,29 @@ if (count($mission_queue) == 0) {
             document.getElementById('uiRep').innerText = `${repCount}/${MAX_REPS_PER_SET}`;
             document.getElementById('qIdxDisplay').innerText = `ท่าที่ ${qIdx + 1}/${queue.length}`;
 
-            // อัปเดต Progress รวม (div5)
-            let totalExercises = queue.length;
-            let progressOverall = Math.min((qIdx / totalExercises) * 100, 100);
-            document.getElementById('missionProgressOverall').style.width = progressOverall + '%';
-            document.getElementById('progressTextOverall').innerText = Math.round(progressOverall) + '%';
+            // --- แก้ไขจุดที่ 2: อัปเดต Progress รวม (div5) คำนวณตามจำนวนครั้งที่ทำ ---
+            let totalTargetReps = 0;
+            let currentCompletedReps = 0;
 
-            // รีเซ็ตการแสดงผล Msg
+            for (let i = 0; i < queue.length; i++) {
+                let sets = parseInt(queue[i].sets) || 1;
+                let repsPerSet = MAX_REPS_PER_SET;
+                let totalExReps = sets * repsPerSet;
+                totalTargetReps += totalExReps;
+
+                if (i < qIdx) {
+                    currentCompletedReps += totalExReps;
+                } else if (i === qIdx) {
+                    currentCompletedReps += ((currentSet - 1) * repsPerSet + repCount);
+                }
+            }
+
+            let progressOverall = totalTargetReps > 0 ? Math.min((currentCompletedReps / totalTargetReps) * 100, 100) : 0;
+            document.getElementById('missionProgressOverall').style.width = progressOverall + '%';
+            document.getElementById('progressTextOverall').innerText = Math.floor(progressOverall) + '%';
+            // -----------------------------------------------------------
+
+            // รีเซ็ตการแสดงผล Msg แนะนำท่าทาง
             document.getElementById('feedbackContainer').classList.add('hidden');
         }
 
@@ -689,4 +705,90 @@ if (count($mission_queue) == 0) {
 
 </body>
 
-</html>
+</html>// ฟังก์ชันอัปเดตหน้าจอเมื่อเปลี่ยนท่า
+function updateUI() {
+if (qIdx >= queue.length) return;
+let ex = queue[qIdx];
+
+// อัปเดตข้อมูลรายละเอียดท่า (div4)
+document.getElementById('exName').innerText = ex.exercise_name;
+document.getElementById('exDetail').innerText = ex.exercise_detail ? ex.exercise_detail : 'ไม่มีรายละเอียด';
+document.getElementById('exHowTo').innerText = ex.how_to ? ex.how_to : 'ไม่มีวิธีปฏิบัติ';
+document.getElementById('reqAcc').innerText = ex.required_accuracy;
+
+// โหลดข้อความแนะนำ (สูงไป/ต่ำไป)
+document.getElementById('textTooHigh').innerText = ex.msg_too_high ? ex.msg_too_high : '';
+document.getElementById('textTooLow').innerText = ex.msg_too_low ? ex.msg_too_low : '';
+
+// --- แก้ไขจุดที่ 1: จัดการการแสดงผลสื่อสาธิตแยกกัน (รูป/วิดีโอ) ---
+let imgContainer = document.getElementById('demoImgContainer');
+let vidContainer = document.getElementById('demoVideoContainer');
+
+// 1. จัดการวิดีโอ
+if (ex.exercise_video && ex.exercise_video.trim() !== '') {
+let vidName = ex.exercise_video.split('/').pop().split('\\').pop();
+let ext = vidName.split('.').pop().toLowerCase();
+if (['mp4', 'webm', 'mov'].includes(ext)) {
+vidContainer.innerHTML = `
+<video class="demo-video" controls loop muted playsinline autoplay>
+    <source src="uploads/exercises/${vidName}" type="video/${ext}">
+    <source src="uploads/${vidName}" type="video/${ext}">
+</video>`;
+} else {
+vidContainer.innerHTML = '<span class="text-gray-500 italic">รูปแบบวิดีโอไม่ถูกต้อง</span>';
+}
+} else {
+vidContainer.innerHTML = `
+<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2 opacity-50 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+</svg><span class="text-gray-500 italic">ไม่มีวิดีโอสาธิต</span>`;
+}
+
+// 2. จัดการรูปภาพ (ดักจับ Error กรณีไฟล์หายให้แสดง no-image.png)
+if (ex.exercise_image && ex.exercise_image.trim() !== '') {
+let imgName = ex.exercise_image.split('/').pop().split('\\').pop();
+imgContainer.innerHTML = `<img src="uploads/exercises/${imgName}" onerror="this.onerror=null; this.src='uploads/${imgName}'; setTimeout(()=>{if(this.naturalWidth === 0) this.src='assets/images/no-image.png';}, 50);" class="demo-img object-contain" alt="Exercise">`;
+} else {
+imgContainer.innerHTML = `<img src="assets/images/no-image.png" class="demo-img object-contain" alt="ไม่มีรูปภาพ">`;
+}
+// -----------------------------------------------------------
+
+// อัปเดตตัวเลขการนับ (div3 overlay)
+document.getElementById('uiEx').innerText = `${qIdx + 1}/${queue.length}`;
+document.getElementById('uiSet').innerText = `${currentSet}/${ex.sets}`;
+document.getElementById('uiRep').innerText = `${repCount}/${MAX_REPS_PER_SET}`;
+document.getElementById('qIdxDisplay').innerText = `ท่าที่ ${qIdx + 1}/${queue.length}`;
+
+// --- แก้ไขจุดที่ 2: อัปเดต Progress รวม (div5) คำนวณตามจำนวนครั้งที่ทำ ---
+let totalTargetReps = 0;
+let currentCompletedReps = 0;
+
+for (let i = 0; i < queue.length; i++) {
+    let sets=parseInt(queue[i].sets) || 1;
+    let repsPerSet=MAX_REPS_PER_SET; // ตัวแปรที่ตั้งค่าไว้ด้านบน (10)
+    let totalExReps=sets * repsPerSet;
+
+    totalTargetReps +=totalExReps;
+
+    if (i < qIdx) {
+    // ท่าที่ทำเสร็จไปแล้ว บวกจำนวนครั้งเต็มจำนวน
+    currentCompletedReps +=totalExReps;
+    } else if (i===qIdx) {
+    // ท่าปัจจุบัน คำนวณจากเซ็ตและครั้งที่ทำผ่านไปแล้ว
+    let completedSetsReps=(currentSet - 1) * repsPerSet;
+    currentCompletedReps +=(completedSetsReps + repCount);
+    }
+    }
+
+    let progressOverall=0;
+    if (totalTargetReps> 0) {
+    progressOverall = Math.min((currentCompletedReps / totalTargetReps) * 100, 100);
+    }
+
+    document.getElementById('missionProgressOverall').style.width = progressOverall + '%';
+    document.getElementById('progressTextOverall').innerText = Math.floor(progressOverall) + '%';
+    // -----------------------------------------------------------
+
+    // รีเซ็ตการแสดงผล Msg แนะนำท่าทาง
+    document.getElementById('feedbackContainer').classList.add('hidden');
+    }
