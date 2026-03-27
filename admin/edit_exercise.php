@@ -45,7 +45,9 @@ if (isset($_POST['update_exercise'])) {
     $req_acc = $_POST['required_accuracy'] ?? 70;
     $total_steps = $_POST['total_steps'] ?? 0;
 
-    $targetDir = "../uploads/";
+    $targetDir = "../uploads/exercises/";
+    if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+
     $ex_image = $exercise['exercise_image'];
     $ex_video = $exercise['exercise_video'];
 
@@ -83,137 +85,55 @@ if (isset($_POST['update_exercise'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>แก้ไขท่าออกกำลังกาย - GYMFITT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        :root {
-            --primary: #ef4444;
-            --primary-hover: #dc2626;
-            --bg-dark: #0f111a;
-            --card-glass: rgba(255, 255, 255, 0.03);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
-        body {
-            background: radial-gradient(circle at top right, #1e2235, var(--bg-dark));
-            color: var(--text-main);
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .header-title {
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 700;
-            font-size: 28px;
-            color: var(--primary);
-            text-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-        }
-
-        .main-container {
-            max-width: 1200px;
-            margin: auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-
-        @media (max-width: 900px) {
-            .main-container {
-                grid-template-columns: 1fr;
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#ef4444',
+                        card: '#121212',
+                        darker: '#0a0a0a'
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        orbitron: ['Orbitron', 'sans-serif']
+                    }
+                }
             }
         }
-
-        .card {
-            background: var(--card-glass);
-            backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 24px;
-            border: 1px solid var(--border-glass);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            height: fit-content;
+    </script>
+    <style>
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .card h2 {
-            font-size: 18px;
-            margin-top: 0;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-glass);
-            padding-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .swal2-container {
+            z-index: 99999 !important;
         }
 
-        .input-group {
-            margin-bottom: 20px;
+        .gymfitt-swal-popup {
+            border-radius: 24px !important;
+            padding: 20px !important;
         }
 
-        .input-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        input,
-        textarea,
-        select {
-            width: 100%;
-            padding: 14px 18px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-glass);
-            color: white;
-            border-radius: 12px;
-            box-sizing: border-box;
-            transition: all 0.3s;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
-        }
-
-        .camera-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .camera-wrap {
-            width: 100%;
-            max-width: 320px;
-            aspect-ratio: 9 / 16;
-            position: relative;
-            background: #000;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.15);
-        }
-
-        video,
-        canvas {
+        /* Camera Custom Ratio */
+        .camera-wrap video,
+        .camera-wrap canvas {
             width: 100%;
             height: 100%;
             position: absolute;
@@ -222,148 +142,131 @@ if (isset($_POST['update_exercise'])) {
             object-fit: cover;
             transform: scaleX(-1);
         }
-
-        .btn {
-            padding: 14px 24px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.3s;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
-        }
-
-        .btn-success {
-            background: #10b981;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
-        }
-
-        .steps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .mini-step {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-glass);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            transition: 0.3s;
-        }
-
-        .mini-step.active {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .mini-step.done {
-            border-color: #10b981;
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-        }
     </style>
 </head>
 
-<body>
+<body class="bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-white font-sans min-h-screen">
 
-    <h1 class="header-title"><i class="fa-solid fa-pen-to-square"></i> แก้ไขท่า: <?= htmlspecialchars($exercise['exercise_name']) ?></h1>
+    <script>
+        (function() {
+            if (localStorage.getItem('gymfitt-theme') === 'light') document.documentElement.classList.remove('dark');
+            else document.documentElement.classList.add('dark');
+        })();
+    </script>
 
-    <form method="POST" enctype="multipart/form-data">
-        <div class="main-container">
+    <!-- Background Effects -->
+    <div class="fixed top-20 right-0 w-96 h-96 bg-red-600/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
+    <div class="fixed bottom-0 left-0 w-96 h-96 bg-red-900/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
 
-            <div class="card">
-                <h2><i class="fa-solid fa-pen-nib"></i> ข้อมูลท่า (Exercise Info)</h2>
-                <div class="input-group">
-                    <label>ชื่อท่าออกกำลังกาย</label>
-                    <input type="text" name="exercise_name" value="<?= htmlspecialchars($exercise['exercise_name']) ?>" required>
-                </div>
-                <div class="input-group">
-                    <label>รายละเอียดของท่า</label>
-                    <textarea name="exercise_detail" rows="2"><?= htmlspecialchars($exercise['exercise_detail']) ?></textarea>
-                </div>
-                <div class="input-group">
-                    <label>วิธีทำ (Step-by-step)</label>
-                    <textarea name="how_to" rows="3"><?= htmlspecialchars($exercise['how_to']) ?></textarea>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="input-group">
-                        <label>รูปภาพ (เปลี่ยนใหม่)</label>
-                        <input type="file" name="ex_image" accept="image/*">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white drop-shadow-sm">
+                <i class="fa-solid fa-pen-to-square text-blue-500 mr-2"></i> แก้ไขท่า: <?= htmlspecialchars($exercise['exercise_name']) ?>
+            </h1>
+            <a href="dashboard.php" class="bg-gray-200 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 text-gray-700 dark:text-white px-5 py-2.5 rounded-xl font-bold transition shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> กลับแดชบอร์ด
+            </a>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- Left Column: Form Info -->
+            <div class="bg-white dark:bg-card rounded-3xl p-6 md:p-8 border border-gray-200 dark:border-red-900/30 shadow-xl transition-colors">
+                <h2 class="text-xl font-bold border-b border-gray-100 dark:border-zinc-800 pb-4 mb-6 flex items-center gap-2 text-primary">
+                    <i class="fa-solid fa-pen-nib"></i> ข้อมูลท่า (Exercise Info)
+                </h2>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">ชื่อท่าออกกำลังกาย <span class="text-primary">*</span></label>
+                        <input type="text" name="exercise_name" value="<?= htmlspecialchars($exercise['exercise_name']) ?>" required class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition">
                     </div>
-                    <div class="input-group">
-                        <label>วิดีโอ (เปลี่ยนใหม่)</label>
-                        <input type="file" name="ex_video" accept="video/*">
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">รายละเอียดของท่า</label>
+                        <textarea name="exercise_detail" rows="2" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"><?= htmlspecialchars($exercise['exercise_detail']) ?></textarea>
                     </div>
-                </div>
-                <div class="input-group">
-                    <label>ข้อความโต้ตอบ AI</label>
-                    <input type="text" name="msg_too_high" value="<?= htmlspecialchars($exercise['msg_too_high'] ?? '') ?>" placeholder="เมื่อสูง/เร็วไป">
-                    <input type="text" name="msg_too_low" value="<?= htmlspecialchars($exercise['msg_too_low'] ?? '') ?>" placeholder="เมื่อต่ำ/ช้าไป" style="margin-top:10px;">
-                </div>
-                <div class="input-group">
-                    <label>เกณฑ์ความแม่นยำ AI (%)</label>
-                    <select name="required_accuracy">
-                        <option value="70" <?= $exercise['required_accuracy'] == 70 ? 'selected' : '' ?>>70% (ระดับเริ่มต้น)</option>
-                        <option value="80" <?= $exercise['required_accuracy'] == 80 ? 'selected' : '' ?>>80% (มาตรฐาน)</option>
-                        <option value="90" <?= $exercise['required_accuracy'] == 90 ? 'selected' : '' ?>>90% (เข้มงวด)</option>
-                    </select>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">วิธีทำ (Step-by-step)</label>
+                        <textarea name="how_to" rows="3" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"><?= htmlspecialchars($exercise['how_to']) ?></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">รูปภาพ (เปลี่ยนใหม่)</label>
+                            <input type="file" name="ex_image" accept="image/*" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-red-600 transition">
+                            <?php if ($exercise['exercise_image']): ?>
+                                <p class="text-xs text-blue-500 mt-2"><i class="fa-solid fa-image"></i> มีรูปภาพเดิมอยู่แล้ว</p>
+                            <?php endif; ?>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">วิดีโอ (เปลี่ยนใหม่)</label>
+                            <input type="file" name="ex_video" accept="video/*" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-red-600 transition">
+                            <?php if ($exercise['exercise_video']): ?>
+                                <p class="text-xs text-blue-500 mt-2"><i class="fa-solid fa-video"></i> มีวิดีโอเดิมอยู่แล้ว</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-darker p-4 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-4">
+                        <label class="block text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-robot text-blue-500"></i> ข้อความโต้ตอบ AI</label>
+                        <input type="text" name="msg_too_high" value="<?= htmlspecialchars($exercise['msg_too_high'] ?? '') ?>" placeholder="เมื่อสูง/เร็วไป (เช่น 'ย่อลงอีกนิด!')" class="w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition">
+                        <input type="text" name="msg_too_low" value="<?= htmlspecialchars($exercise['msg_too_low'] ?? '') ?>" placeholder="เมื่อต่ำ/ช้าไป (เช่น 'ต่ำไปแล้ว ดันขึ้น!')" class="w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">เกณฑ์ความแม่นยำ AI (%)</label>
+                        <select name="required_accuracy" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary outline-none transition">
+                            <option value="70" <?= $exercise['required_accuracy'] == 70 ? 'selected' : '' ?>>70% (ระดับเริ่มต้น)</option>
+                            <option value="80" <?= $exercise['required_accuracy'] == 80 ? 'selected' : '' ?>>80% (มาตรฐาน)</option>
+                            <option value="90" <?= $exercise['required_accuracy'] == 90 ? 'selected' : '' ?>>90% (เข้มงวด)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2><i class="fa-solid fa-camera-retro"></i> บันทึกเซ็นเซอร์ (Sensor Record)</h2>
-                <div class="input-group">
-                    <label>จำนวนขั้นตอนของท่านี้</label>
-                    <select name="total_steps" id="total_steps" onchange="initSteps(false)">
+            <!-- Right Column: Camera & Steps -->
+            <div class="bg-white dark:bg-card rounded-3xl p-6 md:p-8 border border-gray-200 dark:border-red-900/30 shadow-xl transition-colors flex flex-col">
+                <h2 class="text-xl font-bold border-b border-gray-100 dark:border-zinc-800 pb-4 mb-6 flex items-center gap-2 text-primary">
+                    <i class="fa-solid fa-camera-retro"></i> บันทึกเซ็นเซอร์ (Sensor Record)
+                </h2>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">จำนวนขั้นตอนของท่านี้ (Steps)</label>
+                    <select name="total_steps" id="total_steps" onchange="initSteps(false)" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary outline-none transition">
                         <?php for ($i = 1; $i <= 12; $i++): ?>
                             <option value="<?= $i ?>" <?= ($total_existing_steps == $i) ? 'selected' : '' ?>><?= $i ?> ขั้นตอน</option>
                         <?php endfor; ?>
                     </select>
                 </div>
 
-                <div class="camera-container" id="cam-area">
-                    <div class="camera-wrap">
+                <div id="cam-area" class="flex-col items-center flex-1">
+                    <!-- Phone Mockup Camera -->
+                    <div class="camera-wrap w-full max-w-[280px] aspect-[9/16] relative bg-black rounded-[2rem] overflow-hidden border-[6px] border-gray-800 dark:border-zinc-800 shadow-2xl mx-auto">
                         <video id="video" autoplay playsinline></video>
                         <canvas id="canvas"></canvas>
                     </div>
-                    <div class="steps-grid" id="steps_preview"></div>
 
-                    <div style="width: 100%; margin-top: 25px;">
-                        <button type="button" class="btn" id="btn_record" onclick="startCapturing()" style="margin-bottom: 10px;">
-                            <i class="fa-solid fa-record-vinyl"></i> เริ่มบันทึกสเต็ปอัตโนมัติ
+                    <!-- Steps Preview -->
+                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 w-full mt-6" id="steps_preview"></div>
+
+                    <!-- Action Buttons -->
+                    <div class="w-full mt-auto pt-6">
+                        <button type="button" id="btn_record" onclick="startCapturing()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2 mb-3">
+                            <i class="fa-solid fa-rotate-right"></i> อัดท่าทางใหม่ (Re-Record)
                         </button>
-                        <button type="submit" name="update_exercise" class="btn btn-success" id="btn_save">
+
+                        <button type="submit" name="update_exercise" id="btn_save" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
                             <i class="fa-solid fa-save"></i> บันทึกการแก้ไข
                         </button>
-                        <a href="dashboard.php" class="btn" style="background: #64748b; margin-top: 10px;">ยกเลิก</a>
                     </div>
                 </div>
             </div>
 
-        </div>
-    </form>
+        </form>
+    </div>
 
     <script>
         let totalSteps = 0,
@@ -383,18 +286,19 @@ if (isset($_POST['update_exercise'])) {
             for (let i = 1; i <= totalSteps; i++) {
                 let dataVal = "";
                 let statusIcon = '<i class="fa-solid fa-hourglass-half"></i>';
-                let cssClass = "";
+                let bgClass = "bg-gray-100 dark:bg-zinc-900 border-gray-200 dark:border-zinc-700";
+                let textClass = "text-gray-400 dark:text-zinc-500";
 
                 if (loadExisting && existingStepsData[i - 1]) {
                     dataVal = existingStepsData[i - 1].angle_template;
-                    statusIcon = '<i class="fa-solid fa-check-double"></i>';
-                    cssClass = "done";
+                    statusIcon = '<i class="fa-solid fa-check-double text-green-500"></i>';
+                    bgClass = "bg-green-50 dark:bg-green-900/20 border-green-500";
                 }
 
                 preview.innerHTML += `
-                    <div class="mini-step ${cssClass}" id="step_box_${i}">
-                        <b>Step ${i}</b><br>
-                        <span id="st_${i}">${statusIcon}</span>
+                    <div class="${bgClass} border rounded-xl p-3 text-center transition-colors" id="step_box_${i}">
+                        <b class="text-xs text-gray-500 dark:text-zinc-400">Step ${i}</b><br>
+                        <span id="st_${i}" class="${textClass}">${statusIcon}</span>
                         <input type="hidden" name="angle_template_${i}" id="tpl_${i}" value='${dataVal}'>
                     </div>`;
             }
@@ -413,7 +317,9 @@ if (isset($_POST['update_exercise'])) {
                 }
 
                 let countdown = 3;
-                document.getElementById('step_box_' + capIdx).classList.add('active');
+                let box = document.getElementById('step_box_' + capIdx);
+                box.classList.remove('bg-gray-100', 'dark:bg-zinc-900', 'border-gray-200', 'dark:border-zinc-700');
+                box.classList.add('bg-red-50', 'dark:bg-primary/20', 'border-primary');
 
                 let timer = setInterval(() => {
                     if (countdown > 0) {
@@ -422,14 +328,13 @@ if (isset($_POST['update_exercise'])) {
                     } else {
                         clearInterval(timer);
                         btn.innerHTML = `<i class="fa-solid fa-video"></i> กำลังบันทึก Step ${capIdx}...`;
-                        btn.style.background = "#dc2626";
+                        btn.classList.add('bg-red-700');
 
                         document.getElementById('tpl_' + capIdx).value = JSON.stringify(lastData);
 
-                        let box = document.getElementById('step_box_' + capIdx);
-                        box.classList.remove('active');
-                        box.classList.add('done');
-                        document.getElementById('st_' + capIdx).innerHTML = '<i class="fa-solid fa-check"></i>';
+                        box.classList.remove('bg-red-50', 'dark:bg-primary/20', 'border-primary');
+                        box.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border-green-500');
+                        document.getElementById('st_' + capIdx).innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
 
                         capIdx++;
                         setTimeout(captureNext, 1000);
@@ -439,15 +344,18 @@ if (isset($_POST['update_exercise'])) {
 
             function finishCapturing() {
                 btn.disabled = false;
-                btn.style.background = "";
+                btn.classList.remove('bg-red-700');
                 btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> อัดท่าทางใหม่ (Re-Record)';
                 Swal.fire({
                     title: 'บันทึกสำเร็จ!',
                     text: 'จับท่าทางใหม่ครบถ้วนแล้ว',
                     icon: 'success',
-                    background: '#1e2235',
-                    color: '#fff',
-                    confirmButtonColor: '#10b981'
+                    background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
+                    color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
+                    confirmButtonColor: '#10b981',
+                    customClass: {
+                        popup: 'gymfitt-swal-popup'
+                    }
                 });
             }
 
@@ -517,13 +425,29 @@ if (isset($_POST['update_exercise'])) {
 
         <?php if ($success_msg): ?>
             Swal.fire({
-                    title: 'อัปเดตสำเร็จ!',
-                    icon: 'success',
-                    background: '#1e2235',
-                    color: '#fff',
-                    confirmButtonColor: '#10b981'
-                })
-                .then(() => window.location = 'dashboard.php');
+                title: 'อัปเดตสำเร็จ!',
+                icon: 'success',
+                background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
+                confirmButtonColor: '#10b981',
+                customClass: {
+                    popup: 'gymfitt-swal-popup'
+                }
+            }).then(() => window.location = 'dashboard.php');
+        <?php endif; ?>
+
+        <?php if ($error_msg): ?>
+            Swal.fire({
+                title: 'ผิดพลาด!',
+                text: '<?= addslashes($error_msg) ?>',
+                icon: 'error',
+                background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
+                confirmButtonColor: '#ef4444',
+                customClass: {
+                    popup: 'gymfitt-swal-popup'
+                }
+            });
         <?php endif; ?>
     </script>
 </body>

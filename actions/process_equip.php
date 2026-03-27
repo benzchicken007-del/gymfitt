@@ -1,15 +1,18 @@
 <?php
+
 /**
  * GYMFITT Pro - Title Equipment System
  * ไฟล์สำหรับประมวลผลการ ติดตั้ง และ ถอด ฉายา
  */
 
 session_start();
-require_once "config/config.php";
+// ถอยออกมา 1 โฟลเดอร์เพื่อเข้าถึง config.php
+require_once "../config/config.php";
 
 // 1. ตรวจสอบว่าเข้าสู่ระบบหรือยัง
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    // ถอยออกมา 1 โฟลเดอร์เพื่อกลับไปหน้า login
+    header("Location: ../login.php");
     exit();
 }
 
@@ -31,39 +34,38 @@ if ($action === 'equip' && isset($_GET['title_id'])) {
         // หมายเหตุ: การ Update ตรงนี้จะทับค่าเก่าทันที ทำให้ใส่ได้แค่ฉายาเดียว
         $stmtUpdate = $conn->prepare("UPDATE users SET title_active_id = ? WHERE user_id = ?");
         $stmtUpdate->bind_param("ii", $title_id, $user_id);
-        
+
         if ($stmtUpdate->execute()) {
-            header("Location: home.php?equip=success");
+            header("Location: ../home.php?equip=success");
         } else {
-            header("Location: home.php?equip=error");
+            header("Location: ../home.php?equip=error");
         }
         $stmtUpdate->close();
     } else {
         // กรณีไม่มีชื่อเป็นเจ้าของฉายา (แอบใส่ ID มาทาง URL)
-        header("Location: home.php?equip=not_owned");
+        header("Location: ../home.php?equip=not_owned");
     }
     $stmtCheck->close();
-} 
+}
 
 // --- ส่วนของการถอดฉายา (Unequip) ---
 elseif ($action === 'unequip') {
     // ตั้งค่า title_active_id เป็น NULL เพื่อยกเลิกการแสดงฉายา
     $stmtRemove = $conn->prepare("UPDATE users SET title_active_id = NULL WHERE user_id = ?");
     $stmtRemove->bind_param("i", $user_id);
-    
+
     if ($stmtRemove->execute()) {
-        header("Location: home.php?unequip=success");
+        header("Location: ../home.php?unequip=success");
     } else {
-        header("Location: home.php?unequip=error");
+        header("Location: ../home.php?unequip=error");
     }
     $stmtRemove->close();
-} 
+}
 
 // กรณี action ไม่ถูกต้อง
 else {
-    header("Location: home.php");
+    header("Location: ../home.php");
 }
 
 $conn->close();
 exit();
-?>

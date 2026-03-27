@@ -1,9 +1,11 @@
 <?php
 session_start();
-include "config/config.php";
+// ถอยออกมา 1 โฟลเดอร์ (../) แล้วเข้าโฟลเดอร์ config
+include "../config/config.php";
 
-if(!isset($_SESSION['user_id']) || !isset($_GET['title_id'])){
-    header("Location: home.php");
+if (!isset($_SESSION['user_id']) || !isset($_GET['title_id'])) {
+    // ถอยออกมา 1 โฟลเดอร์เพื่อกลับไปหน้า home.php
+    header("Location: ../home.php");
     exit();
 }
 
@@ -14,8 +16,8 @@ $title_id = (int)$_GET['title_id'];
 $title_query = $conn->query("SELECT price FROM shop_titles WHERE title_id = $title_id");
 $title = $title_query->fetch_assoc();
 
-if(!$title) {
-    header("Location: home.php?buy_status=error");
+if (!$title) {
+    header("Location: ../home.php?buy_status=error");
     exit();
 }
 
@@ -25,8 +27,8 @@ $price = (int)$title['price'];
 $user_query = $conn->query("SELECT tokens FROM users WHERE user_id = $user_id");
 $user = $user_query->fetch_assoc();
 
-if($user['tokens'] < $price) {
-    header("Location: home.php?buy_status=insufficient");
+if ($user['tokens'] < $price) {
+    header("Location: ../home.php?buy_status=insufficient");
     exit();
 }
 
@@ -36,14 +38,14 @@ $conn->begin_transaction();
 try {
     // หักเงิน และตั้งฉายาที่ซื้อใหม่เป็น Active ทันที
     $conn->query("UPDATE users SET tokens = tokens - $price, title_active_id = $title_id WHERE user_id = $user_id");
-    
+
     // บันทึกลงตารางผู้ครอบครองฉายา
     $conn->query("INSERT INTO user_titles (user_id, title_id) VALUES ($user_id, $title_id)");
-    
+
     $conn->commit();
-    header("Location: home.php?buy_status=success");
+    header("Location: ../home.php?buy_status=success");
 } catch (Exception $e) {
     $conn->rollback();
-    header("Location: home.php?buy_status=error");
+    header("Location: ../home.php?buy_status=error");
 }
 exit();

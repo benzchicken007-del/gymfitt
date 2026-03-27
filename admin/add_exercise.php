@@ -19,7 +19,7 @@ if (isset($_POST['save_exercise'])) {
     $req_acc = $_POST['required_accuracy'] ?? 70;
     $total_steps = $_POST['total_steps'] ?? 0;
 
-    $targetDir = "../uploads/";
+    $targetDir = "../uploads/exercises/";
     if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
 
     // อัปโหลดรูปภาพและวิดีโอ
@@ -56,464 +56,364 @@ if (isset($_POST['save_exercise'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สร้างท่าออกกำลังกาย - GYMFITT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-    <style>
-        :root {
-            --primary: #ef4444;
-            --primary-hover: #dc2626;
-            --bg-dark: #0f111a;
-            --card-glass: rgba(255, 255, 255, 0.03);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
+    <script src="https://cdn.tailwindcss.com"></script>
 
-        body {
-            background: radial-gradient(circle at top right, #1e2235, var(--bg-dark));
-            color: var(--text-main);
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .header-title {
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: 700;
-            font-size: 28px;
-            color: var(--primary);
-            text-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-        }
-
-        .main-container {
-            max-width: 1200px;
-            margin: auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-
-        @media (max-width: 900px) {
-            .main-container {
-                grid-template-columns: 1fr;
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#ef4444',
+                        card: '#121212',
+                        darker: '#0a0a0a'
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        orbitron: ['Orbitron', 'sans-serif']
+                    }
+                }
             }
         }
-
-        .card {
-            background: var(--card-glass);
-            backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 24px;
-            border: 1px solid var(--border-glass);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            height: fit-content;
+    </script>
+    <style>
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .card h2 {
-            font-size: 18px;
-            margin-top: 0;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-glass);
-            padding-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .swal2-container {
+            z-index: 99999 !important;
         }
 
-        .input-group {
-            margin-bottom: 20px;
+        .gymfitt-swal-popup {
+            border-radius: 24px !important;
+            padding: 20px !important;
         }
 
-        .input-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        input,
-        textarea,
-        select {
-            width: 100%;
-            padding: 14px 18px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-glass);
-            color: white;
-            border-radius: 12px;
-            box-sizing: border-box;
-            transition: all 0.3s;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
-        }
-
-        /* Camera Box (16:9 Vertical Ratio) */
-        .camera-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .camera-wrap {
-            width: 100%;
-            max-width: 320px;
-            /* ขนาดความกว้างมือถือ */
-            aspect-ratio: 9 / 16;
-            /* 16:9 แนวตั้ง */
-            position: relative;
-            background: #000;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.15);
-        }
-
-        video,
-        canvas {
+        /* Camera Custom Ratio */
+        .camera-wrap video,
+        .camera-wrap canvas {
             width: 100%;
             height: 100%;
             position: absolute;
             top: 0;
             left: 0;
             object-fit: cover;
-            /* ครอปส่วนที่เกินเพื่อให้เต็ม 16:9 พอดี */
             transform: scaleX(-1);
-            /* Mirror */
-        }
-
-        .btn {
-            padding: 14px 24px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.3s;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
-        }
-
-        .btn-success {
-            background: #10b981;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
-        }
-
-        .steps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .mini-step {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-glass);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            transition: 0.3s;
-        }
-
-        .mini-step.active {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .mini-step.done {
-            border-color: #10b981;
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
         }
     </style>
 </head>
 
-<body>
+<body class="bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-white font-sans min-h-screen">
 
-    <h1 class="header-title"><i class="fa-solid fa-person-walking"></i> เพิ่มท่าออกกำลังกายใหม่</h1>
+    <script>
+        (function() {
+            if (localStorage.getItem('gymfitt-theme') === 'light') document.documentElement.classList.remove('dark');
+            else document.documentElement.classList.add('dark');
+        })();
+    </script>
 
+    <!-- Background Effects -->
+    <div class="fixed top-20 right-0 w-96 h-96 bg-red-600/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
+    <div class="fixed bottom-0 left-0 w-96 h-96 bg-red-900/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
 
+    <div class="max-w-7xl mx-auto px-4 py-8">
 
-    <form method="POST" enctype="multipart/form-data">
-        <div class="main-container">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white drop-shadow-sm">
+                <i class="fa-solid fa-person-walking text-blue-500 mr-2"></i> เพิ่มท่าออกกำลังกายใหม่
+            </h1>
+            <a href="dashboard.php" class="bg-gray-200 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 text-gray-700 dark:text-white px-5 py-2.5 rounded-xl font-bold transition shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> กลับแดชบอร์ด
+            </a>
+        </div>
 
-            <div class="card">
-                <h2><i class="fa-solid fa-pen-nib"></i> ข้อมูลท่า (Exercise Info)</h2>
+        <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                <div class="input-group">
-                    <label>ชื่อท่าออกกำลังกาย</label>
-                    <input type="text" name="exercise_name" placeholder="เช่น Squat, Push-up" required>
-                </div>
+            <!-- Left Column: Form Info -->
+            <div class="bg-white dark:bg-card rounded-3xl p-6 md:p-8 border border-gray-200 dark:border-red-900/30 shadow-xl transition-colors">
+                <h2 class="text-xl font-bold border-b border-gray-100 dark:border-zinc-800 pb-4 mb-6 flex items-center gap-2 text-primary">
+                    <i class="fa-solid fa-pen-nib"></i> ข้อมูลท่า (Exercise Info)
+                </h2>
 
-                <div class="input-group">
-                    <label>รายละเอียดของท่า</label>
-                    <textarea name="exercise_detail" rows="2" placeholder="อธิบายจุดเด่นของท่านี้"></textarea>
-                </div>
-
-                <div class="input-group">
-                    <label>วิธีทำ (Step-by-step)</label>
-                    <textarea name="how_to" rows="3" placeholder="1. ลง...&#10;2. ขึ้น..."></textarea>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="input-group">
-                        <label>รูปภาพ (Image)</label>
-                        <input type="file" name="ex_image" accept="image/*">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">ชื่อท่าออกกำลังกาย <span class="text-primary">*</span></label>
+                        <input type="text" name="exercise_name" placeholder="เช่น Squat, Push-up" required class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition">
                     </div>
-                    <div class="input-group">
-                        <label>วิดีโอ (Video)</label>
-                        <input type="file" name="ex_video" accept="video/*">
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">รายละเอียดของท่า</label>
+                        <textarea name="exercise_detail" rows="2" placeholder="อธิบายจุดเด่นของท่านี้" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"></textarea>
                     </div>
-                </div>
 
-                <div class="input-group">
-                    <label>ข้อความโต้ตอบ AI</label>
-                    <input type="text" name="msg_too_high" placeholder="เมื่อสูง/เร็วไป (เช่น 'ย่อลงอีกนิด!')">
-                    <input type="text" name="msg_too_low" placeholder="เมื่อต่ำ/ช้าไป (เช่น 'ต่ำไปแล้ว ดันขึ้น!')" style="margin-top:10px;">
-                </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">วิธีทำ (Step-by-step)</label>
+                        <textarea name="how_to" rows="3" placeholder="1. ลง...&#10;2. ขึ้น..." class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"></textarea>
+                    </div>
 
-                <div class="input-group">
-                    <label>เกณฑ์ความแม่นยำ AI (%)</label>
-                    <select name="required_accuracy">
-                        <option value="70">70% (ระดับเริ่มต้น)</option>
-                        <option value="80" selected>80% (มาตรฐาน)</option>
-                        <option value="90">90% (เข้มงวด)</option>
-                    </select>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">รูปภาพ (Image)</label>
+                            <input type="file" name="ex_image" accept="image/*" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-red-600 transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">วิดีโอ (Video)</label>
+                            <input type="file" name="ex_video" accept="video/*" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-red-600 transition">
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-darker p-4 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-4">
+                        <label class="block text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-robot text-blue-500"></i> ข้อความโต้ตอบ AI</label>
+                        <input type="text" name="msg_too_high" placeholder="เมื่อสูง/เร็วไป (เช่น 'ย่อลงอีกนิด!')" class="w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition">
+                        <input type="text" name="msg_too_low" placeholder="เมื่อต่ำ/ช้าไป (เช่น 'ต่ำไปแล้ว ดันขึ้น!')" class="w-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">เกณฑ์ความแม่นยำ AI (%)</label>
+                        <select name="required_accuracy" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary outline-none transition">
+                            <option value="70">70% (ระดับเริ่มต้น)</option>
+                            <option value="80" selected>80% (มาตรฐาน)</option>
+                            <option value="90">90% (เข้มงวด)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2><i class="fa-solid fa-camera-retro"></i> บันทึกเซ็นเซอร์ (Sensor Record)</h2>
+            <!-- Right Column: Camera & Steps -->
+            <div class="bg-white dark:bg-card rounded-3xl p-6 md:p-8 border border-gray-200 dark:border-red-900/30 shadow-xl transition-colors flex flex-col">
+                <h2 class="text-xl font-bold border-b border-gray-100 dark:border-zinc-800 pb-4 mb-6 flex items-center gap-2 text-primary">
+                    <i class="fa-solid fa-camera-retro"></i> บันทึกเซ็นเซอร์ (Sensor Record)
+                </h2>
 
-                <div class="input-group">
-                    <label>จำนวนขั้นตอนท่านี้ (Steps)</label>
-                    <select name="total_steps" id="total_steps" onchange="initSteps()">
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1.5">จำนวนขั้นตอนท่านี้ (Steps)</label>
+                    <select name="total_steps" id="total_steps" onchange="initSteps()" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-primary outline-none transition">
                         <option value="">-- เลือกจำนวนขั้นตอน --</option>
                         <?php for ($i = 1; $i <= 12; $i++) echo "<option value='$i'>$i ขั้นตอน</option>"; ?>
                     </select>
                 </div>
 
-                <div class="camera-container" id="cam-area" style="display:none;">
-                    <div class="camera-wrap">
+                <div id="cam-area" style="display:none;" class="flex-col items-center flex-1">
+                    <!-- Phone Mockup Camera -->
+                    <div class="camera-wrap w-full max-w-[280px] aspect-[9/16] relative bg-black rounded-[2rem] overflow-hidden border-[6px] border-gray-800 dark:border-zinc-800 shadow-2xl mx-auto">
                         <video id="video" autoplay playsinline></video>
                         <canvas id="canvas"></canvas>
                     </div>
 
-                    <div class="steps-grid" id="steps_preview"></div>
+                    <!-- Steps Preview -->
+                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 w-full mt-6" id="steps_preview"></div>
 
-                    <div style="width: 100%; margin-top: 25px;">
-                        <button type="button" class="btn" id="btn_record" onclick="startCapturing()" style="display:none;">
-                            <i class="fa-solid fa-record-vinyl"></i> เริ่มบันทึกสเต็ปอัตโนมัติ
+                    <!-- Action Buttons -->
+                    <div class="w-full mt-auto pt-6">
+                        <button type="button" id="btn_record" onclick="startCapturing()" class="w-full bg-primary hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-record-vinyl animate-pulse"></i> เริ่มบันทึกสเต็ปอัตโนมัติ
                         </button>
-                        <button type="button" class="btn" id="btn_reset" onclick="location.reload()" style="display:none; background: #64748b;">
-                            <i class="fa-solid fa-rotate-right"></i> เริ่มบันทึกใหม่
-                        </button>
-                        <button type="submit" name="save_exercise" class="btn btn-success" id="btn_save" style="display:none;">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกท่าลงฐานข้อมูล
-                        </button>
+
+                        <div class="flex gap-3 mt-3">
+                            <button type="button" id="btn_reset" onclick="location.reload()" style="display:none;" class="flex-1 bg-gray-200 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 text-gray-700 dark:text-white font-bold py-3.5 rounded-xl transition flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-rotate-right"></i> เริ่มใหม่
+                            </button>
+                            <button type="submit" name="save_exercise" id="btn_save" style="display:none;" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:shadow-lg transition flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกท่า
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-        </div>
-    </form>
+        </form>
+    </div>
 
-    <button onclick="window.location='dashboard.php'" class="btn" style="max-width: 200px; margin: 30px auto; display: block;">
-        <i class="fa-solid fa-arrow-left"></i> กลับ
+    <script>
+        let totalSteps = 0,
+            capIdx = 1,
+            lastData = {};
 
-        <script>
-            let totalSteps = 0,
-                capIdx = 1,
-                lastData = {};
+        function initSteps() {
+            totalSteps = parseInt(document.getElementById('total_steps').value);
+            if (totalSteps > 0) {
+                document.getElementById('cam-area').style.display = "flex";
+                document.getElementById('btn_record').style.display = "flex";
+                document.getElementById('btn_reset').style.display = "none";
+                document.getElementById('btn_save').style.display = "none";
 
-            function initSteps() {
-                totalSteps = parseInt(document.getElementById('total_steps').value);
-                if (totalSteps > 0) {
-                    document.getElementById('cam-area').style.display = "flex";
-                    document.getElementById('btn_record').style.display = "flex";
-                    let preview = document.getElementById('steps_preview');
-                    preview.innerHTML = "";
-                    for (let i = 1; i <= totalSteps; i++) {
-                        preview.innerHTML += `
-                        <div class="mini-step" id="step_box_${i}">
-                            <b>Step ${i}</b><br>
-                            <span id="st_${i}"><i class="fa-solid fa-hourglass-half"></i></span>
-                            <input type="hidden" name="angle_template_${i}" id="tpl_${i}">
-                        </div>`;
-                    }
-                    startCamera();
+                let preview = document.getElementById('steps_preview');
+                preview.innerHTML = "";
+                for (let i = 1; i <= totalSteps; i++) {
+                    preview.innerHTML += `
+                    <div class="bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl p-3 text-center transition-colors" id="step_box_${i}">
+                        <b class="text-xs text-gray-500 dark:text-zinc-400">Step ${i}</b><br>
+                        <span id="st_${i}" class="text-gray-400 dark:text-zinc-500"><i class="fa-solid fa-hourglass-half"></i></span>
+                        <input type="hidden" name="angle_template_${i}" id="tpl_${i}">
+                    </div>`;
                 }
+                startCamera();
+            } else {
+                document.getElementById('cam-area').style.display = "none";
             }
+        }
 
-            function startCapturing() {
-                if (capIdx > totalSteps) return;
-                const btn = document.getElementById('btn_record');
-                btn.disabled = true;
+        function startCapturing() {
+            if (capIdx > totalSteps) return;
+            const btn = document.getElementById('btn_record');
+            btn.disabled = true;
 
-                function captureNext() {
-                    if (capIdx > totalSteps) {
-                        finishCapturing();
-                        return;
-                    }
-
-                    let countdown = 3;
-                    document.getElementById('step_box_' + capIdx).classList.add('active');
-
-                    let timer = setInterval(() => {
-                        if (countdown > 0) {
-                            btn.innerHTML = `<i class="fa-solid fa-clock"></i> Step ${capIdx}: เตรียมตัว... ${countdown}`;
-                            countdown--;
-                        } else {
-                            clearInterval(timer);
-                            // บันทึกข้อมูล
-                            btn.innerHTML = `<i class="fa-solid fa-video"></i> กำลังบันทึก Step ${capIdx}...`;
-                            btn.style.background = "#dc2626";
-
-                            document.getElementById('tpl_' + capIdx).value = JSON.stringify(lastData);
-
-                            // อัปเดต UI
-                            let box = document.getElementById('step_box_' + capIdx);
-                            box.classList.remove('active');
-                            box.classList.add('done');
-                            document.getElementById('st_' + capIdx).innerHTML = '<i class="fa-solid fa-check"></i>';
-
-                            capIdx++;
-                            setTimeout(captureNext, 1000); // เว้นระยะ 1 วินาทีก่อนเริ่มสเต็ปถัดไป
-                        }
-                    }, 1000);
+            function captureNext() {
+                if (capIdx > totalSteps) {
+                    finishCapturing();
+                    return;
                 }
 
-                function finishCapturing() {
-                    btn.style.display = "none";
-                    document.getElementById('btn_reset').style.display = "flex";
-                    document.getElementById('btn_save').style.display = "flex";
-                    Swal.fire({
-                        title: 'บันทึกสำเร็จ!',
-                        text: 'จับท่าทางครบถ้วนแล้ว กรุณากดปุ่มบันทึกลงฐานข้อมูล',
-                        icon: 'success',
-                        background: '#1e2235',
-                        color: '#fff',
-                        confirmButtonColor: '#10b981'
-                    });
-                }
+                let countdown = 3;
+                let box = document.getElementById('step_box_' + capIdx);
+                box.classList.remove('bg-gray-100', 'dark:bg-zinc-900', 'border-gray-200', 'dark:border-zinc-700');
+                box.classList.add('bg-red-50', 'dark:bg-primary/20', 'border-primary');
 
-                captureNext();
-            }
+                let timer = setInterval(() => {
+                    if (countdown > 0) {
+                        btn.innerHTML = `<i class="fa-solid fa-clock"></i> Step ${capIdx}: เตรียมตัว... ${countdown}`;
+                        countdown--;
+                    } else {
+                        clearInterval(timer);
+                        btn.innerHTML = `<i class="fa-solid fa-video"></i> กำลังบันทึก Step ${capIdx}...`;
+                        btn.classList.add('bg-red-700');
 
-            function startCamera() {
-                const video = document.getElementById('video');
-                const canvas = document.getElementById('canvas');
-                const ctx = canvas.getContext('2d');
+                        document.getElementById('tpl_' + capIdx).value = JSON.stringify(lastData);
 
-                const pose = new Pose({
-                    locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-                });
-                pose.setOptions({
-                    modelComplexity: 1,
-                    smoothLandmarks: true,
-                    minDetectionConfidence: 0.6
-                });
+                        box.classList.remove('bg-red-50', 'dark:bg-primary/20', 'border-primary');
+                        box.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border-green-500');
+                        document.getElementById('st_' + capIdx).innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
 
-                pose.onResults(results => {
-                    // ดึงขนาดความกว้าง/ยาว ของวิดีโอมาปรับให้ canvas ทับพอดี
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    // ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height); // ปิดไม่วาดภาพซ้ำเพื่อความลื่น
-
-                    if (results.poseLandmarks) {
-                        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
-                            color: '#00f2ff',
-                            lineWidth: 4
-                        });
-                        drawLandmarks(ctx, results.poseLandmarks, {
-                            color: '#ffffff',
-                            fillColor: '#ef4444',
-                            radius: 4
-                        });
-
-                        const lm = results.poseLandmarks;
-                        lastData = {
-                            angles: {
-                                le: calc(lm[11], lm[13], lm[15]),
-                                re: calc(lm[12], lm[14], lm[16]),
-                                lk: calc(lm[23], lm[25], lm[27]),
-                                rk: calc(lm[24], lm[26], lm[28])
-                            },
-                            heights: {
-                                lw_y: (lm[15].y - lm[11].y).toFixed(3),
-                                rw_y: (lm[16].y - lm[12].y).toFixed(3)
-                            }
-                        };
+                        capIdx++;
+                        setTimeout(captureNext, 1000);
                     }
-                });
-
-                // ตั้งค่าความละเอียดแนวตั้งให้ MediaPipe ขอจากกล้อง
-                new Camera(video, {
-                    onFrame: async () => {
-                        await pose.send({
-                            image: video
-                        });
-                    },
-                    width: 720,
-                    height: 1280
-                }).start();
+                }, 1000);
             }
 
-            function calc(a, b, c) {
-                let r = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-                let ang = Math.abs(r * 180.0 / Math.PI);
-                return ang > 180 ? 360 - ang : ang;
-            }
-
-            <?php if ($success_msg): ?>
+            function finishCapturing() {
+                btn.style.display = "none";
+                document.getElementById('btn_reset').style.display = "flex";
+                document.getElementById('btn_save').style.display = "flex";
                 Swal.fire({
-                    title: 'สำเร็จ!',
-                    text: 'เพิ่มท่าออกกำลังกายเรียบร้อย',
+                    title: 'บันทึกสำเร็จ!',
+                    text: 'จับท่าทางครบถ้วนแล้ว กรุณากดปุ่มบันทึกลงฐานข้อมูล',
                     icon: 'success',
-                    background: '#1e2235',
-                    color: '#fff',
-                    confirmButtonColor: '#10b981'
-                }).then(() => window.location = 'dashboard.php');
-            <?php endif; ?>
-        </script>
+                    background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
+                    color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
+                    confirmButtonColor: '#10b981',
+                    customClass: {
+                        popup: 'gymfitt-swal-popup'
+                    }
+                });
+            }
+
+            captureNext();
+        }
+
+        function startCamera() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const pose = new Pose({
+                locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+            });
+            pose.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                minDetectionConfidence: 0.6
+            });
+
+            pose.onResults(results => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (results.poseLandmarks) {
+                    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
+                        color: '#00f2ff',
+                        lineWidth: 4
+                    });
+                    drawLandmarks(ctx, results.poseLandmarks, {
+                        color: '#ffffff',
+                        fillColor: '#ef4444',
+                        radius: 4
+                    });
+
+                    const lm = results.poseLandmarks;
+                    lastData = {
+                        angles: {
+                            le: calc(lm[11], lm[13], lm[15]),
+                            re: calc(lm[12], lm[14], lm[16]),
+                            lk: calc(lm[23], lm[25], lm[27]),
+                            rk: calc(lm[24], lm[26], lm[28])
+                        },
+                        heights: {
+                            lw_y: (lm[15].y - lm[11].y).toFixed(3),
+                            rw_y: (lm[16].y - lm[12].y).toFixed(3)
+                        }
+                    };
+                }
+            });
+
+            new Camera(video, {
+                onFrame: async () => {
+                    await pose.send({
+                        image: video
+                    });
+                },
+                width: 720,
+                height: 1280
+            }).start();
+        }
+
+        function calc(a, b, c) {
+            let r = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+            let ang = Math.abs(r * 180.0 / Math.PI);
+            return ang > 180 ? 360 - ang : ang;
+        }
+
+        <?php if ($success_msg): ?>
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: 'เพิ่มท่าออกกำลังกายเรียบร้อย',
+                icon: 'success',
+                background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
+                confirmButtonColor: '#10b981',
+                customClass: {
+                    popup: 'gymfitt-swal-popup'
+                }
+            }).then(() => window.location = 'dashboard.php');
+        <?php endif; ?>
+
+        <?php if ($error_msg): ?>
+            Swal.fire({
+                title: 'ผิดพลาด!',
+                text: '<?= addslashes($error_msg) ?>',
+                icon: 'error',
+                background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
+                confirmButtonColor: '#ef4444',
+                customClass: {
+                    popup: 'gymfitt-swal-popup'
+                }
+            });
+        <?php endif; ?>
+    </script>
 </body>
 
 </html>

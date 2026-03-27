@@ -40,7 +40,6 @@ $active_title_color = !empty($user['title_color']) ? $user['title_color'] : "#ff
 $current_title_id = !empty($user['active_id']) ? $user['active_id'] : 0;
 
 // --- ระบบรูปโปรไฟล์แบบป้องกันรูปหาย 100% ---
-// สร้างรูประดับเริ่มต้นจากชื่อ User เป็นอักษรย่อสีแดง
 $default_avatar = "https://api.dicebear.com/7.x/initials/svg?seed=" . urlencode($full_name) . "&backgroundColor=dc2626&textColor=ffffff";
 $profile_pic = $default_avatar;
 
@@ -52,7 +51,6 @@ if (!empty($user['profile_image'])) {
         $profile_pic = "uploads/" . $filename;
     }
 }
-// ------------------------------------------
 
 function getRequiredExp($level)
 {
@@ -190,17 +188,28 @@ include 'includes/header.php';
     .swal2-container {
         z-index: 99999 !important;
     }
+
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
 </style>
 
 <?php include 'includes/navbar.php'; ?>
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative transition-colors duration-300">
 
+    <!-- เอฟเฟกต์แสงพื้นหลัง -->
     <div class="fixed top-20 right-0 w-96 h-96 bg-red-600/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
     <div class="fixed bottom-0 left-0 w-96 h-96 bg-red-900/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
+        <!-- ================= คอลัมน์ซ้าย: โปรไฟล์และประวัติ ================= -->
         <div class="lg:col-span-1 space-y-6">
             <div class="bg-white dark:bg-card rounded-3xl p-6 shadow-xl dark:shadow-2xl border border-gray-200 dark:border-red-900/30 relative overflow-hidden text-center transition-colors duration-300">
                 <div class="absolute -top-20 -right-20 w-48 h-48 bg-primary/10 dark:bg-primary/20 blur-[50px] rounded-full"></div>
@@ -253,6 +262,7 @@ include 'includes/header.php';
                 </div>
             </div>
 
+            <!-- กล่องประวัติล่าสุด -->
             <div class="bg-white dark:bg-card rounded-3xl p-6 shadow-xl border border-gray-200 dark:border-red-900/30 transition-colors duration-300">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white"><i class="fa-solid fa-clock-rotate-left text-primary mr-2"></i> ประวัติล่าสุด</h3>
@@ -267,10 +277,9 @@ include 'includes/header.php';
                             <div class="flex items-center gap-3 bg-gray-50 dark:bg-darker p-3 rounded-2xl border border-gray-100 dark:border-red-900/20 hover:border-primary/50 transition cursor-pointer group">
                                 <div class="w-12 h-12 rounded-xl overflow-hidden bg-gray-200 dark:bg-zinc-900 shrink-0">
                                     <?php
-                                    // ตรวจสอบว่าเป็นรูปภารกิจ หรือรูปท่าฝึกซ้อม
                                     $img_name = basename($h['display_image']);
                                     $is_mission = ($h['mission_id'] > 0);
-                                    $imgPath = "assets/images/no-image.png"; // รูปพื้นฐานถ้าหาไม่เจอ
+                                    $imgPath = "assets/images/no-image.png";
 
                                     if (!empty($img_name)) {
                                         if ($is_mission && file_exists("uploads/missions/" . $img_name)) {
@@ -291,7 +300,6 @@ include 'includes/header.php';
                                 <div class="text-right">
                                     <span class="text-xs font-bold <?php echo ($h['accuracy'] >= 70) ? 'text-green-500' : 'text-primary'; ?>"><?php echo $h['accuracy']; ?>%</span>
                                 </div>
-
                             </div>
                         <?php endwhile; ?>
                     <?php else: ?>
@@ -307,69 +315,70 @@ include 'includes/header.php';
             </div>
         </div>
 
+        <!-- ================= คอลัมน์ขวา: ภารกิจและท่าฝึกซ้อม ================= -->
         <div class="lg:col-span-2 space-y-8">
 
-            <div>
-                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 drop-shadow-md">
-                    <i class="fa-solid fa-fire text-primary"></i> ภารกิจประจำวัน
-                </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <?php while ($m = $missions->fetch_assoc()):
-                        $limit = isset($m['daily_limit']) ? (int)$m['daily_limit'] : 1;
-                        $done = (int)$m['today_play_count'];
-                        $is_locked = ($done >= $limit);
-                        $bg_class = $is_locked ? 'border-gray-200 dark:border-zinc-800 opacity-60' : 'border-gray-200 dark:border-red-900/40 hover:border-primary dark:hover:border-primary shadow-lg';
+            <!-- ภารกิจแนะนำวันนี้ -->
+            <div class="mb-8">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-star text-yellow-500"></i> ภารกิจแนะนำวันนี้
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">ทำภารกิจเพื่อรับ EXP และ Tokens มากมาย</p>
+                    </div>
+                    <a href="missions.php" class="text-primary font-bold text-sm hover:underline">ดูทั้งหมด <i class="fa-solid fa-chevron-right text-[10px]"></i></a>
+                </div>
 
-                        // คำนวณ Path รูปภาพให้ถูกต้องก่อนส่งเข้า Modal
-                        $m_img_name = basename($m['mission_image']);
-                        $m_img = "assets/images/no-image.png";
-                        if (!empty($m_img_name)) {
-                            if (file_exists("uploads/missions/" . $m_img_name)) {
-                                $m_img = "uploads/missions/" . $m_img_name;
-                            } elseif (file_exists("uploads/" . $m_img_name)) {
-                                $m_img = "uploads/" . $m_img_name;
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <?php if ($missions->num_rows > 0): ?>
+                        <?php while ($m = $missions->fetch_assoc()):
+                            $m['final_image'] = "assets/images/no-image.png";
+                            if (!empty($m['mission_image'])) {
+                                $m_img_name = basename($m['mission_image']);
+                                if (file_exists("uploads/missions/" . $m_img_name)) $m['final_image'] = "uploads/missions/" . $m_img_name;
+                                elseif (file_exists("uploads/" . $m_img_name)) $m['final_image'] = "uploads/" . $m_img_name;
                             }
-                        }
-                        $m['final_image'] = $m_img;
-                    ?>
-                        <div class="bg-white dark:bg-card rounded-2xl border <?php echo $bg_class; ?> cursor-pointer hover:-translate-y-1 transition duration-300 relative overflow-hidden group" onclick='<?php echo $is_locked ? "" : "openMissionModal(" . htmlspecialchars(json_encode($m), ENT_QUOTES, "UTF-8") . ")"; ?>'>
-
-                            <div class="absolute top-3 left-3 flex gap-2 z-20">
-                                <span class="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded shadow-md">+<?php echo $m['exp_reward']; ?> XP</span>
-                                <?php if ($m['token_reward'] > 0): ?>
-                                    <span class="bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded shadow-md"><i class="fa-solid fa-coins"></i> +<?php echo $m['token_reward']; ?></span>
-                                <?php endif; ?>
+                        ?>
+                            <!-- คลิกเปิด Modal สำหรับภารกิจแนะนำ -->
+                            <div class="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-red-900/30 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer" onclick='openMissionModal(<?php echo htmlspecialchars(json_encode($m), ENT_QUOTES, "UTF-8"); ?>)'>
+                                <div class="relative h-40 overflow-hidden">
+                                    <img src="<?php echo $m['final_image']; ?>" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                                    <div class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-lg">+<?php echo $m['exp_reward']; ?> XP</div>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-bold text-gray-900 dark:text-white truncate"><?php echo htmlspecialchars($m['mission_name']); ?></h4>
+                                    <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-1"><?php echo htmlspecialchars($m['mission_detail'] ?? 'ท้าทายขีดจำกัดของคุณ'); ?></p>
+                                </div>
                             </div>
-
-                            <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded border border-white/10 z-20">
-                                <?php echo $done; ?>/<?php echo $limit; ?>
-                            </div>
-
-                            <div class="h-40 w-full relative overflow-hidden bg-gray-200 dark:bg-darker">
-                                <?php if ($is_locked): ?>
-                                    <div class="absolute inset-0 bg-black/50 z-10 flex items-center justify-center backdrop-blur-sm">
-                                        <div class="bg-white text-black font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-check"></i> สำเร็จแล้ว</div>
-                                    </div>
-                                <?php endif; ?>
-                                <img src="<?php echo $m['final_image']; ?>" class="w-full h-full object-cover opacity-80 dark:opacity-70 <?php echo $is_locked ? 'grayscale' : 'group-hover:opacity-100 group-hover:scale-110'; ?> transition duration-500">
-                            </div>
-                            <div class="p-4 relative z-20 bg-gradient-to-t from-white dark:from-card via-white dark:via-card to-transparent -mt-10 pt-10 transition-colors">
-                                <h4 class="font-bold text-gray-900 dark:text-white text-lg truncate transition-colors"><?php echo htmlspecialchars($m['mission_name']); ?></h4>
-                                <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1 line-clamp-1 transition-colors"><?php echo htmlspecialchars($m['mission_detail']); ?></p>
-                            </div>
-                        </div>
-                    <?php endwhile; ?>
+                        <?php endwhile; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <div>
+            <!-- ท่าออกกำลังกาย (และภารกิจย่อย) -->
+            <div class="pb-12">
                 <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 drop-shadow-md">
-                    <i class="fa-solid fa-fire text-primary"></i> ท่าออกกำลังกาย
+                    <i class="fa-solid fa-dumbbell text-primary"></i> ท่าออกกำลังกาย
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <?php
                     $ex_query = $conn->query("SELECT * FROM exercises ORDER BY exercise_id DESC");
                     while ($ex = $ex_query->fetch_assoc()):
+                        $ex_id = $ex['exercise_id'];
+
+                        // ค้นหาภารกิจที่เกี่ยวข้อง (ดึงข้อมูล m.* เพื่อใช้กับ Modal ได้ครบ)
+                        $related_mission_query = $conn->prepare("
+                            SELECT m.*, 
+                                   (SELECT COUNT(*) FROM workout_history wh WHERE wh.mission_id = m.mission_id AND wh.user_id = ? AND DATE(wh.workout_date) = ?) as today_play_count
+                            FROM missions m
+                            JOIN mission_exercises me ON m.mission_id = me.mission_id
+                            WHERE me.exercise_id = ?
+                        ");
+                        $related_mission_query->bind_param("isi", $user_id, $today_str, $ex_id);
+                        $related_mission_query->execute();
+                        $related_missions = $related_mission_query->get_result();
+
                         $ex_img_name = basename($ex['exercise_image']);
                         $ex_img = "assets/images/no-image.png";
                         if (!empty($ex_img_name)) {
@@ -380,16 +389,51 @@ include 'includes/header.php';
                             }
                         }
                     ?>
-                        <div class="bg-gray-50 dark:bg-darker rounded-2xl border border-gray-200 dark:border-zinc-800 hover:border-primary/50 dark:hover:border-white/50 cursor-pointer transition duration-300 flex items-center p-3 gap-4 group" onclick="window.location.href='play_exercise.php?id=<?php echo $ex['exercise_id']; ?>'">
-                            <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-200 dark:bg-zinc-900 shrink-0 border border-gray-300 dark:border-zinc-700 group-hover:border-primary dark:group-hover:border-white transition">
-                                <img src="<?php echo $ex_img; ?>" class="w-full h-full object-cover opacity-90 dark:opacity-80 group-hover:opacity-100 group-hover:scale-110 transition duration-300">
+                        <div class="bg-gray-50 dark:bg-darker rounded-2xl border border-gray-200 dark:border-zinc-800 transition duration-300 flex flex-col group overflow-hidden">
+                            <!-- ส่วนหัวของการ์ด (คลิกเพื่อเลื่อนเปิด Accordion) -->
+                            <div class="flex items-center p-3 gap-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800/50 transition" onclick="toggleMissions(<?php echo $ex_id; ?>)">
+                                <div class="w-20 h-20 rounded-xl overflow-hidden bg-gray-200 dark:bg-zinc-900 shrink-0 border border-gray-300 dark:border-zinc-700 group-hover:border-primary dark:group-hover:border-white transition">
+                                    <img src="<?php echo $ex_img; ?>" class="w-full h-full object-cover opacity-90 dark:opacity-80 group-hover:opacity-100 group-hover:scale-110 transition duration-300">
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors"><?php echo htmlspecialchars($ex['exercise_name']); ?></h4>
+                                    <!-- ปุ่มกดไปฝึกซ้อมอิสระ แบบใหม่ให้ดูเป็นปุ่มกดจริงๆ -->
+                                    <button onclick="event.stopPropagation(); window.location.href='play_exercise.php?id=<?php echo $ex['exercise_id']; ?>'" class="mt-2 text-xs font-bold text-white bg-primary hover:bg-red-600 transition-all shadow-sm hover:shadow-md flex items-center gap-1 px-3 py-1.5 rounded-lg w-fit active:scale-95">
+                                        <i class="fa-solid fa-play text-[10px]"></i> ฝึกซ้อมอิสระ
+                                    </button>
+                                </div>
+                                <div class="text-gray-400 dark:text-zinc-600 transition pr-2" id="icon-<?php echo $ex_id; ?>">
+                                    <i class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                                </div>
                             </div>
-                            <div class="flex-1">
-                                <h4 class="font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors"><?php echo htmlspecialchars($ex['exercise_name']); ?></h4>
-                                <p class="text-[10px] text-gray-500 dark:text-zinc-500 line-clamp-2 mt-1 transition-colors"><?php echo htmlspecialchars($ex['exercise_detail']); ?></p>
-                            </div>
-                            <div class="text-gray-400 dark:text-zinc-600 group-hover:text-primary dark:group-hover:text-white transition pr-2">
-                                <i class="fa-solid fa-chevron-right"></i>
+
+                            <!-- ส่วนภารกิจที่เกี่ยวข้อง (ซ่อนไว้เริ่มต้น) -->
+                            <div class="hidden border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-card p-4 transition-all" id="missions-<?php echo $ex_id; ?>">
+                                <div class="text-[10px] text-gray-500 dark:text-zinc-500 uppercase tracking-widest mb-3 font-semibold">🎯 ภารกิจที่ใช้ท่านี้:</div>
+                                <?php if ($related_missions->num_rows > 0): ?>
+                                    <div class="space-y-2">
+                                        <?php while ($rm = $related_missions->fetch_assoc()):
+                                            // จัดเตรียมรูปภาพสำหรับ Modal
+                                            $rm['final_image'] = "assets/images/no-image.png";
+                                            if (!empty($rm['mission_image'])) {
+                                                $rm_img_name = basename($rm['mission_image']);
+                                                if (file_exists("uploads/missions/" . $rm_img_name)) $rm['final_image'] = "uploads/missions/" . $rm_img_name;
+                                                elseif (file_exists("uploads/" . $rm_img_name)) $rm['final_image'] = "uploads/" . $rm_img_name;
+                                            }
+                                        ?>
+                                            <!-- เปลี่ยนเป็น div เพื่อคลิกเปิด Modal -->
+                                            <div onclick='openMissionModal(<?php echo htmlspecialchars(json_encode($rm), ENT_QUOTES, "UTF-8"); ?>)' class="cursor-pointer flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-darker border border-gray-100 dark:border-zinc-800 hover:border-primary/50 dark:hover:border-primary/50 transition group/item">
+                                                <span class="text-xs font-bold text-gray-700 dark:text-zinc-300 group-hover/item:text-primary transition flex items-center gap-2">
+                                                    <i class="fa-solid fa-fire text-primary/70"></i>
+                                                    <?php echo htmlspecialchars($rm['mission_name']); ?>
+                                                </span>
+                                                <i class="fa-solid fa-play text-[10px] text-gray-400 group-hover/item:text-primary transition"></i>
+                                            </div>
+                                        <?php endwhile; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <p class="text-xs text-gray-400 italic text-center py-2">ยังไม่มีภารกิจสำหรับท่านี้</p>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endwhile; ?>
@@ -397,8 +441,10 @@ include 'includes/header.php';
             </div>
 
         </div>
-    </div>
+    </div> <!-- End Grid -->
 </main>
+
+<!-- ================= Modals (Mission, Shop, Inventory) ================= -->
 
 <div id="missionModal" class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-card w-full max-w-md rounded-3xl border border-gray-200 dark:border-red-900/50 overflow-hidden transform transition-all shadow-2xl">
@@ -406,9 +452,9 @@ include 'includes/header.php';
         <div class="p-6">
             <h2 id="modalTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-2"></h2>
             <div class="flex flex-wrap gap-2 mb-4">
-                <span class="bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 text-xs px-3 py-1 rounded-lg">🎯 เซ็ตจัดเต็ม</span>
+                <span class="bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 text-xs px-3 py-1 rounded-lg">🎯 <span id="modalSetsDisplay"></span></span>
                 <span class="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-xs px-3 py-1 rounded-lg"><i class="fa-solid fa-coins"></i> <span id="modalTokenReward"></span></span>
-                <span class="bg-red-50 dark:bg-primary/10 border border-red-200 dark:border-primary/30 text-primary text-xs px-3 py-1 rounded-lg">รอบ: <span id="modalProgress"></span></span>
+                <span class="bg-red-50 dark:bg-primary/10 border border-red-200 dark:border-primary/30 text-primary text-xs px-3 py-1 rounded-lg">รอบวันนี้: <span id="modalProgress"></span></span>
             </div>
             <p id="modalDesc" class="text-gray-600 dark:text-zinc-400 text-sm mb-6 line-clamp-3"></p>
 
@@ -484,145 +530,7 @@ include 'includes/header.php';
     </div>
 </div>
 
-<script>
-    // สคริปต์เพื่อให้สีของ SweetAlert ปรับตาม Theme ด้วย
-    function getSwalBg() {
-        return document.documentElement.classList.contains('dark') ? '#140505' : '#ffffff';
-    }
-
-    function getSwalColor() {
-        return document.documentElement.classList.contains('dark') ? '#ffffff' : '#1f2937';
-    }
-
-    function openMissionModal(m) {
-        document.getElementById('modalTitle').innerText = m.mission_name;
-        document.getElementById('modalDesc').innerText = m.mission_detail || 'ไม่มีรายละเอียดเพิ่มเติม';
-        document.getElementById('modalTokenReward').innerText = (m.token_reward || 0);
-
-        const limit = m.daily_limit ? parseInt(m.daily_limit) : 1;
-        const done = parseInt(m.today_play_count);
-        document.getElementById('modalProgress').innerText = `${done}/${limit}`;
-
-        const media = document.getElementById('modalMedia');
-        if (m.final_image && m.final_image !== "assets/images/no-image.png") {
-            let path = m.final_image;
-            let ext = path.split('.').pop().toLowerCase();
-            media.innerHTML = (['mp4', 'webm'].includes(ext)) ?
-                `<video src="${path}" autoplay muted loop class="w-full h-full object-cover"></video>` :
-                `<img src='${path}' class="w-full h-full object-cover">`;
-        } else {
-            media.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-zinc-900 text-gray-400 dark:text-zinc-600"><i class="fa-solid fa-image fa-3x"></i></div>';
-        }
-
-        const isLocked = (done >= limit);
-        document.getElementById('modalButtonContainer').innerHTML = isLocked ?
-            `<button class="w-full bg-gray-300 dark:bg-zinc-800 text-gray-500 dark:text-zinc-500 py-3 rounded-xl font-bold cursor-not-allowed" disabled>🔒 สิทธิ์เต็มแล้ว</button>` :
-            `<button class="w-full bg-primary hover:bg-red-600 text-white py-3 rounded-xl font-bold transition shadow-[0_0_10px_rgba(220,38,38,0.3)]" onclick="location.href='play_mission.php?mission_id=${m.mission_id}'">เริ่มภารกิจ</button>`;
-
-        document.getElementById('missionModal').classList.remove('hidden');
-        document.getElementById('missionModal').classList.add('flex');
-    }
-
-    function closeMissionModal() {
-        document.getElementById('missionModal').classList.add('hidden');
-        document.getElementById('missionModal').classList.remove('flex');
-    }
-
-    function openShop() {
-        closeInventory();
-        document.getElementById('shopModal').classList.remove('hidden');
-        document.getElementById('shopModal').classList.add('flex');
-    }
-
-    function closeShop() {
-        document.getElementById('shopModal').classList.add('hidden');
-        document.getElementById('shopModal').classList.remove('flex');
-    }
-
-    function openInventory() {
-        closeShop();
-        document.getElementById('inventoryModal').classList.remove('hidden');
-        document.getElementById('inventoryModal').classList.add('flex');
-    }
-
-    function closeInventory() {
-        document.getElementById('inventoryModal').classList.add('hidden');
-        document.getElementById('inventoryModal').classList.remove('flex');
-    }
-
-    function confirmBuyTitle(id, name, price) {
-        const userTokens = <?php echo $tokens; ?>;
-        if (userTokens < price) {
-            Swal.fire({
-                title: 'Token ไม่พอ!',
-                text: 'ออกกำลังกายสะสมเพิ่มก่อนนะ',
-                icon: 'error',
-                background: getSwalBg(),
-                color: getSwalColor()
-            });
-            return;
-        }
-        Swal.fire({
-            title: 'ยืนยันการซื้อ?',
-            html: `ซื้อฉายา <b class="text-yellow-500">${name}</b><br>ราคา ${price} Tokens ใช่หรือไม่?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'ยืนยัน',
-            cancelButtonText: 'ยกเลิก',
-            background: getSwalBg(),
-            color: getSwalColor()
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = `actions/process_buy_title.php?title_id=${id}`;
-            }
-        });
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('buy_status') === 'success') {
-        Swal.fire({
-            title: 'สำเร็จ!',
-            text: 'เพิ่มฉายาในคลังแล้ว',
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false,
-            background: getSwalBg(),
-            color: getSwalColor()
-        });
-    }
-    if (urlParams.get('equip') === 'success') {
-        Swal.fire({
-            title: 'สำเร็จ!',
-            text: 'ติดตั้งฉายาเรียบร้อย',
-            icon: 'success',
-            timer: 1500,
-            showConfirmButton: false,
-            background: getSwalBg(),
-            color: getSwalColor()
-        });
-    }
-    if (urlParams.get('unequip') === 'success') {
-        Swal.fire({
-            title: 'สำเร็จ!',
-            text: 'ถอดฉายาเรียบร้อย',
-            icon: 'success',
-            timer: 1500,
-            showConfirmButton: false,
-            background: getSwalBg(),
-            color: getSwalColor()
-        });
-    }
-    if (urlParams.get('status') === 'history_cleared') {
-        Swal.fire({
-            title: 'ล้างประวัติแล้ว!',
-            icon: 'success',
-            timer: 1500,
-            showConfirmButton: false,
-            background: getSwalBg(),
-            color: getSwalColor()
-        });
-    }
-</script>
+<script src="assets/js/script.js"></script>
 
 </body>
 

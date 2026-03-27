@@ -69,693 +69,433 @@ $totalTitles = ($titlesQuery) ? $titlesQuery->num_rows : 0;
 ?>
 
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GYMFITT Pro Admin | Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Config to match Home Theme -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#ef4444',
+                        card: '#121212',
+                        darker: '#0a0a0a'
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        orbitron: ['Orbitron', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
-        :root {
-            --primary: #ef4444;
-            --primary-glow: rgba(239, 68, 68, 0.4);
-            --bg-dark: #09090b;
-            --card-dark: #18181b;
-            --sidebar-w: 260px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Poppins', 'Sarabun', sans-serif;
-            background-color: var(--bg-dark);
-            color: #fafafa;
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
+            font-family: 'Poppins', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* SIDEBAR */
-        .sidebar {
-            width: var(--sidebar-w);
-            background: var(--card-dark);
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
-            z-index: 100;
-            transition: var(--transition);
-        }
-
-        .sidebar-header {
-            padding: 30px;
-            text-align: center;
-        }
-
-        .sidebar-header .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
-            letter-spacing: 1px;
-            text-shadow: 0 0 15px var(--primary-glow);
-        }
-
-        .nav-links {
-            padding: 20px;
-            list-style: none;
-            flex-grow: 1;
-        }
-
-        .nav-links li {
-            margin-bottom: 10px;
-        }
-
-        .nav-links a {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            color: #a1a1aa;
-            text-decoration: none;
-            border-radius: 12px;
-            transition: var(--transition);
-        }
-
-        .nav-links a:hover,
-        .nav-links a.active {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--primary);
-        }
-
-        .logout-section {
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .logout-link {
-            color: #f87171;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 15px;
-            border-radius: 12px;
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-        /* MAIN CONTENT */
-        .main-content {
-            margin-left: var(--sidebar-w);
-            flex-grow: 1;
-            padding: 40px;
-            width: calc(100% - var(--sidebar-w));
-        }
-
-        .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-        }
-
-        .admin-profile {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: var(--card-dark);
-            padding: 8px 20px;
-            border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* STATS CARDS */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 25px;
-            margin-bottom: 50px;
-        }
-
-        .stat-card {
-            background: var(--card-dark);
-            padding: 30px;
-            border-radius: 24px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            transition: var(--transition);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-glow);
-        }
-
-        .stat-card i {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            font-size: 80px;
-            opacity: 0.05;
-            color: var(--primary);
-        }
-
-        .stat-card .value {
-            font-size: 36px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        /* TABLE DESIGN */
-        .table-container {
-            background: var(--card-dark);
-            border-radius: 24px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            margin-bottom: 40px;
-        }
-
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .add-btn {
-            background: var(--primary);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 14px;
-            text-decoration: none;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            padding: 18px;
-            color: #71717a;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        td {
-            padding: 18px;
-            font-size: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .xp-badge {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--primary);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .action-btn {
-            width: 35px;
-            height: 35px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-        }
-
-        .edit {
-            background: rgba(56, 189, 248, 0.1);
-            color: #38bdf8;
-        }
-
-        .delete {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--primary);
-        }
-
-        /* MODAL STYLE */
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+        .hide-scrollbar::-webkit-scrollbar {
             display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
         }
 
-        .modal-content {
-            background: var(--card-dark);
-            width: 100%;
-            max-width: 450px;
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            position: relative;
-            animation: slideUp 0.3s ease;
-        }
-
-        .modal-content.large {
-            max-width: 800px;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #a1a1aa;
-            font-size: 14px;
-        }
-
-        .form-control {
-            width: 100%;
-            background: #09090b;
-            border: 1px solid #27272a;
-            padding: 12px 15px;
-            border-radius: 12px;
-            color: white;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary);
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            cursor: pointer;
-            color: #71717a;
-            font-size: 20px;
-        }
-
-        /* Title Inventory Design */
-        .inventory-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            max-height: 500px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
-        .title-card {
-            background: #09090b;
-            border-radius: 18px;
-            padding: 20px;
-            border: 1px solid #27272a;
-            text-align: center;
-        }
-
-        .rarity-badge {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 50px;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
-
-        .rarity-Common {
-            background: #52525b;
-            color: white;
-        }
-
-        .rarity-Rare {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .rarity-Epic {
-            background: #a855f7;
-            color: white;
-        }
-
-        .rarity-Legendary {
-            background: #eab308;
-            color: black;
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
         .swal2-container {
-            z-index: 9999 !important;
-        }
-
-        /* LIGHT MODE */
-        body.light-mode {
-            background-color: #f4f4f5;
-            color: #18181b;
-        }
-
-        .light-mode .sidebar,
-        .light-mode .stat-card,
-        .light-mode .table-container,
-        .light-mode .modal-content,
-        .light-mode .admin-profile,
-        .light-mode .title-card {
-            background: white;
-            border-color: #e4e4e7;
-        }
-
-        .light-mode .nav-links a {
-            color: #52525b;
-        }
-
-        .light-mode .stat-card .value {
-            color: #18181b;
-        }
-
-        .light-mode td {
-            color: #27272a;
-            border-bottom-color: #f1f1f4;
-        }
-
-        .light-mode .form-control {
-            background: #f8f8f9;
-            color: #18181b;
-            border-color: #d4d4d8;
-        }
-
-        .light-mode .modal-content h2 {
-            color: #18181b;
+            z-index: 99999 !important;
         }
 
         .gymfitt-swal-popup {
-            border-radius: 20px !important;
+            border-radius: 24px !important;
             padding: 20px !important;
         }
     </style>
 </head>
 
-<body>
+<body class="bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-white">
 
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">GYMFITT PRO</div>
-        </div>
-        <ul class="nav-links">
-            <li><a href="dashboard.php" class="active"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="members.php"><i class="fa-solid fa-users"></i> จัดการสมาชิก</a></li>
-            <li><a href="#" onclick="toggleTheme()"><i class="fa-solid fa-palette"></i> เปลี่ยนธีม</a></li>
-        </ul>
-        <div class="logout-section">
-            <a href="javascript:void(0)" onclick="confirmLogout()" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</a>
-        </div>
-    </nav>
+    <!-- Theme Initializer script (Runs before rendering to prevent flash) -->
+    <script>
+        (function() {
+            if (localStorage.getItem('gymfitt-theme') === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 
-    <main class="main-content">
-        <header class="header-section">
+    <!-- เอฟเฟกต์แสงพื้นหลัง -->
+    <div class="fixed top-20 right-0 w-96 h-96 bg-red-600/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
+    <div class="fixed bottom-0 left-0 w-96 h-96 bg-red-900/10 blur-[100px] rounded-full pointer-events-none z-[-1] hidden dark:block"></div>
+
+    <!-- Sidebar -->
+    <aside class="fixed top-0 left-0 h-screen w-64 bg-white dark:bg-card border-r border-gray-200 dark:border-red-900/30 z-50 flex flex-col transition-colors duration-300 shadow-xl">
+        <div class="p-6 text-center border-b border-gray-100 dark:border-zinc-800">
+            <h2 class="font-bold text-2xl text-primary font-orbitron tracking-wider drop-shadow-md"><i class="fa-solid fa-dumbbell"></i> GYMFITT</h2>
+            <span class="text-[10px] font-bold text-gray-500 dark:text-zinc-500 uppercase tracking-widest bg-gray-100 dark:bg-zinc-900 px-3 py-1 rounded-full mt-2 inline-block border border-gray-200 dark:border-zinc-800">Admin Panel</span>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto hide-scrollbar">
+            <a href="dashboard.php" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-primary/10 text-primary font-bold transition shadow-sm border border-red-100 dark:border-primary/20">
+                <i class="fa-solid fa-chart-pie"></i> ภาพรวมแอดมิน
+            </a>
+            <a href="members.php" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/50 hover:text-primary transition font-medium">
+                <i class="fa-solid fa-users"></i> จัดการสมาชิก
+            </a>
+            <a href="#" onclick="toggleTheme()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/50 hover:text-primary transition font-medium">
+                <i class="fa-solid fa-palette"></i> เปลี่ยนธีมสี
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100 dark:border-zinc-800">
+            <a href="javascript:void(0)" onclick="confirmLogout()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition font-bold border border-transparent hover:border-red-200 dark:hover:border-red-900/50">
+                <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 p-8 min-h-screen relative transition-colors duration-300">
+
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-10 bg-white dark:bg-card p-6 rounded-3xl border border-gray-200 dark:border-red-900/30 shadow-sm">
             <div>
-                <h1 style="font-weight: 600;">สถิติภาพรวม</h1>
-                <p>แผงควบคุมหลักสำหรับแอดมิน <span style="color:var(--primary)">@<?= $_SESSION['admin_username'] ?? 'Admin' ?></span></p>
+                <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3 drop-shadow-sm">
+                    ยินดีต้อนรับ, <span class="text-primary">@<?= $_SESSION['admin_username'] ?? 'Admin' ?></span> 👋
+                </h1>
+                <p class="text-sm text-gray-500 dark:text-zinc-400 mt-1">นี่คือแผงควบคุมหลักสำหรับจัดการข้อมูลในระบบ GYMFITT</p>
             </div>
-            <div class="admin-profile" onclick="openInventoryModal()" style="cursor:pointer;">
-                <i class="fa-solid fa-box-open" style="font-size: 20px; color: #fbbf24;"></i>
-                <span style="font-weight: 500; font-size: 14px;">คลังฉายา (<?= $totalTitles ?>)</span>
+            <div class="flex items-center gap-4">
+                <div class="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 px-5 py-2.5 rounded-2xl shadow-sm flex items-center gap-3 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-500/20 transition transform active:scale-95" onclick="openInventoryModal()">
+                    <div class="w-8 h-8 rounded-full bg-yellow-400 text-black flex items-center justify-center font-bold shadow-sm">
+                        <i class="fa-solid fa-box-open text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-yellow-600 dark:text-yellow-400 uppercase font-bold tracking-widest leading-none">ฉายาทั้งหมด</div>
+                        <div class="text-sm font-bold text-gray-900 dark:text-white"><?= $totalTitles ?> <span class="text-xs text-gray-500 dark:text-zinc-400">รายการ</span></div>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>สมาชิกทั้งหมด</h3>
-                <div class="value"><?= number_format($totalUsers) ?></div>
-                <i class="fa-solid fa-users"></i>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <!-- Stat 1 -->
+            <div class="bg-white dark:bg-card rounded-3xl p-6 border border-gray-200 dark:border-red-900/30 shadow-xl dark:shadow-2xl relative overflow-hidden group hover:-translate-y-2 transition duration-300">
+                <div class="absolute -bottom-4 -right-4 opacity-5 text-9xl group-hover:scale-110 transition duration-500 text-gray-900 dark:text-white"><i class="fa-solid fa-users"></i></div>
+                <div class="relative z-10 flex flex-col h-full">
+                    <p class="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-widest mb-1"><i class="fa-solid fa-users text-gray-400 mr-1"></i> สมาชิกในระบบ</p>
+                    <div class="text-4xl font-extrabold text-gray-900 dark:text-white mt-auto"><?= number_format($totalUsers) ?> <span class="text-sm text-primary font-bold">คน</span></div>
+                </div>
             </div>
-            <div class="stat-card">
-                <h3>ท่าออกกำลังกาย</h3>
-                <div class="value"><?= number_format($totalExercises) ?></div>
-                <i class="fa-solid fa-person-walking" style="color: #38bdf8;"></i>
+            <!-- Stat 2 -->
+            <div class="bg-white dark:bg-card rounded-3xl p-6 border border-gray-200 dark:border-blue-900/30 shadow-xl dark:shadow-2xl relative overflow-hidden group hover:-translate-y-2 transition duration-300">
+                <div class="absolute -bottom-4 -right-4 opacity-5 text-9xl group-hover:scale-110 transition duration-500 text-blue-500"><i class="fa-solid fa-person-walking"></i></div>
+                <div class="relative z-10 flex flex-col h-full">
+                    <p class="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-widest mb-1"><i class="fa-solid fa-person-walking text-blue-500 mr-1"></i> ท่าออกกำลังกาย</p>
+                    <div class="text-4xl font-extrabold text-blue-500 mt-auto"><?= number_format($totalExercises) ?> <span class="text-sm text-gray-500 dark:text-zinc-400 font-bold">ท่า</span></div>
+                </div>
             </div>
-            <div class="stat-card">
-                <h3>ภารกิจในระบบ</h3>
-                <div class="value"><?= number_format($totalMissions) ?></div>
-                <i class="fa-solid fa-dumbbell"></i>
+            <!-- Stat 3 -->
+            <div class="bg-white dark:bg-card rounded-3xl p-6 border border-gray-200 dark:border-yellow-900/30 shadow-xl dark:shadow-2xl relative overflow-hidden group hover:-translate-y-2 transition duration-300">
+                <div class="absolute -bottom-4 -right-4 opacity-5 text-9xl group-hover:scale-110 transition duration-500 text-yellow-500"><i class="fa-solid fa-star"></i></div>
+                <div class="relative z-10 flex flex-col h-full">
+                    <p class="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-widest mb-1"><i class="fa-solid fa-dumbbell text-yellow-500 mr-1"></i> ภารกิจทั้งหมด</p>
+                    <div class="text-4xl font-extrabold text-yellow-500 mt-auto"><?= number_format($totalMissions) ?> <span class="text-sm text-gray-500 dark:text-zinc-400 font-bold">ภารกิจ</span></div>
+                </div>
             </div>
         </div>
 
-        <div class="table-container">
-            <div class="table-header">
-                <h2 style="font-size: 18px; font-weight: 600;"><i class="fa-solid fa-person-walking" style="color: #38bdf8;"></i> คลังท่าออกกำลังกาย (Exercises)</h2>
-                <a href="add_exercise.php" class="add-btn" style="background: #38bdf8;">
+        <!-- Exercises Table -->
+        <div class="bg-white dark:bg-card rounded-3xl p-6 lg:p-8 border border-gray-200 dark:border-red-900/30 shadow-xl mb-10 transition-colors duration-300">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2 drop-shadow-sm">
+                    <i class="fa-solid fa-person-walking text-blue-500"></i> คลังท่าออกกำลังกาย
+                </h2>
+                <a href="add_exercise.php" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 px-5 rounded-xl transition shadow-md hover:shadow-lg flex items-center gap-2 transform active:scale-95 text-sm">
                     <i class="fa-solid fa-plus"></i> เพิ่มท่าใหม่
                 </a>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>รูปภาพ</th>
-                        <th>ชื่อท่าออกกำลังกาย</th>
-                        <th>ความแม่นยำ (AI)</th>
-                        <th>จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($exerciseList && $exerciseList->num_rows > 0): ?>
-                        <?php while ($row = $exerciseList->fetch_assoc()): ?>
-                            <tr>
-                                <td style="color: #71717a;">#<?= $row['exercise_id'] ?></td>
-                                <td>
-                                    <?php if ($row['exercise_image']): ?>
-                                        <img src="../uploads/<?= htmlspecialchars($row['exercise_image']) ?>" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover;">
-                                    <?php else: ?>
-                                        <div style="width: 50px; height: 50px; background: #27272a; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 10px; color:#71717a;">No IMG</div>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="font-weight: 600; color: #38bdf8;"><?= htmlspecialchars($row['exercise_name']) ?></td>
-                                <td><span class="xp-badge" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8;"><i class="fa-solid fa-crosshairs"></i> <?= $row['required_accuracy'] ?>%</span></td>
-                                <td>
-                                    <div class="actions">
-                                        <a href="edit_exercise.php?id=<?= $row['exercise_id'] ?>" class="action-btn edit" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></a>
-                                        <button class="action-btn delete" onclick="confirmDeleteExercise(<?= $row['exercise_id'] ?>, '<?= htmlspecialchars(addslashes($row['exercise_name'])) ?>')" title="ลบ"><i class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5" style="text-align:center; padding: 40px; color: #71717a;">ยังไม่มีท่าออกกำลังกายในระบบ</td>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-gray-400 dark:text-zinc-500 text-xs border-b border-gray-100 dark:border-zinc-800 uppercase tracking-wider">
+                            <th class="pb-4 font-semibold px-4">ID</th>
+                            <th class="pb-4 font-semibold px-4">รูปภาพ</th>
+                            <th class="pb-4 font-semibold px-4">ชื่อท่า</th>
+                            <th class="pb-4 font-semibold px-4 text-center">ความแม่นยำ AI</th>
+                            <th class="pb-4 font-semibold px-4 text-right">จัดการ</th>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="text-gray-700 dark:text-zinc-300 text-sm">
+                        <?php if ($exerciseList && $exerciseList->num_rows > 0): ?>
+                            <?php while ($row = $exerciseList->fetch_assoc()): ?>
+                                <tr class="border-b border-gray-50 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition">
+                                    <td class="py-4 px-4 text-gray-400 dark:text-zinc-600 font-medium">#<?= $row['exercise_id'] ?></td>
+                                    <td class="py-4 px-4">
+                                        <?php if ($row['exercise_image']): ?>
+                                            <img src="../uploads/exercises/<?= htmlspecialchars($row['exercise_image']) ?>" onerror="this.src='../uploads/<?= htmlspecialchars($row['exercise_image']) ?>'" class="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-zinc-700 shadow-sm">
+                                        <?php else: ?>
+                                            <div class="w-12 h-12 bg-gray-100 dark:bg-zinc-900 rounded-xl flex items-center justify-center text-[9px] text-gray-400 font-bold border border-gray-200 dark:border-zinc-800">NO IMG</div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-gray-900 dark:text-white"><?= htmlspecialchars($row['exercise_name']) ?></td>
+                                    <td class="py-4 px-4 text-center">
+                                        <span class="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-500/20 inline-flex items-center gap-1 text-xs shadow-sm">
+                                            <i class="fa-solid fa-crosshairs text-[10px]"></i> <?= $row['required_accuracy'] ?>%
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="edit_exercise.php?id=<?= $row['exercise_id'] ?>" class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white transition shadow-sm" title="แก้ไข"><i class="fa-solid fa-pen-to-square text-sm"></i></a>
+                                            <button onclick="confirmDeleteExercise(<?= $row['exercise_id'] ?>, '<?= htmlspecialchars(addslashes($row['exercise_name'])) ?>')" class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-500/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition shadow-sm" title="ลบ"><i class="fa-solid fa-trash text-sm"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="py-12 text-center text-gray-400 italic">ยังไม่มีท่าออกกำลังกายในระบบ</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="table-container">
-            <div class="table-header">
-                <h2 style="font-size: 18px; font-weight: 600;"><i class="fa-solid fa-dumbbell" style="color: var(--primary);"></i> จัดการระบบภารกิจ (Missions)</h2>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="openInventoryModal()" class="add-btn" style="background: #a855f7;">
-                        <i class="fa-solid fa-box"></i> คลังฉายา
+        <!-- Missions Table -->
+        <div class="bg-white dark:bg-card rounded-3xl p-6 lg:p-8 border border-gray-200 dark:border-red-900/30 shadow-xl transition-colors duration-300">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2 drop-shadow-sm">
+                    <i class="fa-solid fa-star text-primary"></i> จัดการระบบภารกิจ
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="openTitleModal()" class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2.5 px-5 rounded-xl transition shadow-md hover:shadow-lg flex items-center gap-2 transform active:scale-95 text-sm">
+                        <i class="fa-solid fa-tags"></i> เพิ่มฉายา
                     </button>
-                    <button onclick="openTitleModal()" class="add-btn" style="background: #fbbf24; color: black;">
-                        <i class="fa-solid fa-plus"></i> เพิ่มฉายา
-                    </button>
-                    <a href="add_mission.php" class="add-btn">
+                    <a href="add_mission.php" class="bg-primary hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-xl transition shadow-md hover:shadow-lg flex items-center gap-2 transform active:scale-95 text-sm">
                         <i class="fa-solid fa-plus"></i> เพิ่มภารกิจ
                     </a>
                 </div>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>ชื่อภารกิจ</th>
-                        <th>จำกัดต่อวัน</th>
-                        <th>รางวัล</th>
-                        <th>จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($missionList && $missionList->num_rows > 0): ?>
-                        <?php while ($row = $missionList->fetch_assoc()): ?>
-                            <tr>
-                                <td style="color: #71717a;">#<?= $row['mission_id'] ?></td>
-                                <td style="font-weight: 600;"><?= htmlspecialchars($row['mission_name']) ?></td>
-                                <td>
-                                    <div style="font-size: 13px; opacity: 0.8;"><i class="fa-solid fa-clock"></i> <?= $row['daily_limit'] ?> ครั้ง/วัน</div>
-                                </td>
-                                <td>
-                                    <span class="xp-badge">+<?= number_format($row['exp_reward']) ?> XP</span>
-                                    <?php if ($row['token_reward'] > 0): ?>
-                                        <span class="xp-badge" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24;">+<?= number_format($row['token_reward']) ?> <i class="fa-solid fa-coins"></i></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="actions">
-                                        <a href="edit_mission.php?id=<?= $row['mission_id'] ?>" class="action-btn edit" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></a>
-                                        <button class="action-btn delete" onclick="confirmDelete(<?= $row['mission_id'] ?>, '<?= htmlspecialchars(addslashes($row['mission_name'])) ?>')" title="ลบ"><i class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5" style="text-align:center; padding: 40px; color: #71717a;">ยังไม่มีข้อมูลภารกิจในระบบ</td>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-gray-400 dark:text-zinc-500 text-xs border-b border-gray-100 dark:border-zinc-800 uppercase tracking-wider">
+                            <th class="pb-4 font-semibold px-4">ID</th>
+                            <th class="pb-4 font-semibold px-4">ชื่อภารกิจ</th>
+                            <th class="pb-4 font-semibold px-4 text-center">จำกัด/วัน</th>
+                            <th class="pb-4 font-semibold px-4">รางวัล</th>
+                            <th class="pb-4 font-semibold px-4 text-right">จัดการ</th>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="text-gray-700 dark:text-zinc-300 text-sm">
+                        <?php if ($missionList && $missionList->num_rows > 0): ?>
+                            <?php while ($row = $missionList->fetch_assoc()): ?>
+                                <tr class="border-b border-gray-50 dark:border-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-800/20 transition">
+                                    <td class="py-4 px-4 text-gray-400 dark:text-zinc-600 font-medium">#<?= $row['mission_id'] ?></td>
+                                    <td class="py-4 px-4 font-bold text-gray-900 dark:text-white"><?= htmlspecialchars($row['mission_name']) ?></td>
+                                    <td class="py-4 px-4 text-center">
+                                        <div class="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 shadow-sm">
+                                            <i class="fa-solid fa-rotate-right text-[10px]"></i> <?= $row['daily_limit'] ?> รอบ
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="bg-red-50 dark:bg-primary/10 text-primary font-bold px-2.5 py-1 rounded-lg border border-red-200 dark:border-primary/20 text-[10px] shadow-sm">
+                                                +<?= number_format($row['exp_reward']) ?> XP
+                                            </span>
+                                            <?php if ($row['token_reward'] > 0): ?>
+                                                <span class="bg-yellow-50 dark:bg-yellow-400/10 text-yellow-600 dark:text-yellow-400 font-bold px-2.5 py-1 rounded-lg border border-yellow-200 dark:border-yellow-400/20 text-[10px] shadow-sm">
+                                                    +<?= number_format($row['token_reward']) ?> <i class="fa-solid fa-coins"></i>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="edit_mission.php?id=<?= $row['mission_id'] ?>" class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white transition shadow-sm" title="แก้ไข"><i class="fa-solid fa-pen-to-square text-sm"></i></a>
+                                            <button onclick="confirmDelete(<?= $row['mission_id'] ?>, '<?= htmlspecialchars(addslashes($row['mission_name'])) ?>')" class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-500/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition shadow-sm" title="ลบ"><i class="fa-solid fa-trash text-sm"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="py-12 text-center text-gray-400 italic">ยังไม่มีข้อมูลภารกิจในระบบ</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
 
-    <div id="titleModal" class="modal-backdrop">
-        <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" onclick="closeTitleModal()"></i>
-            <h2 style="margin-bottom: 25px;"><i class="fa-solid fa-tags" style="color: #fbbf24;"></i> สร้างฉายาใหม่</h2>
-            <form action="process_add_title.php" method="POST">
-                <div class="form-group">
-                    <label>ชื่อฉายา</label>
-                    <input type="text" name="title_name" class="form-control" placeholder="เช่น เทพเจ้าสงคราม" required>
-                </div>
-                <div class="form-group">
-                    <label>ระดับความหายาก</label>
-                    <select name="rarity" class="form-control">
-                        <option value="Common">Common</option>
-                        <option value="Rare">Rare</option>
-                        <option value="Epic">Epic</option>
-                        <option value="Legendary">Legendary</option>
-                    </select>
-                </div>
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div><label>ราคา (Token)</label><input type="number" name="price" class="form-control" value="100" min="0" required></div>
-                    <div><label>สีฉายา</label><input type="color" name="title_color" class="form-control" style="height: 48px; padding: 5px;" value="#ef4444"></div>
-                </div>
-                <button type="submit" class="add-btn" style="width: 100%; justify-content: center; background: #fbbf24; color: black;">
-                    <i class="fa-solid fa-check"></i> บันทึกเข้าร้านค้า
-                </button>
-            </form>
+    <!-- ================= MODALS ================= -->
+
+    <!-- Modal เพิ่มฉายา -->
+    <div id="titleModal" class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-card w-full max-w-md rounded-3xl border border-gray-200 dark:border-red-900/50 shadow-2xl overflow-hidden transform transition-all">
+            <div class="p-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50 dark:bg-darker">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-tags text-yellow-500"></i> สร้างฉายาใหม่</h2>
+                <button onclick="closeTitleModal()" class="text-gray-400 hover:text-primary transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form action="process_add_title.php" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">ชื่อฉายา</label>
+                        <input type="text" name="title_name" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none transition" placeholder="เช่น เทพเจ้าสงคราม" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">ระดับความหายาก</label>
+                        <select name="rarity" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-yellow-500 outline-none transition">
+                            <option value="Common">Common</option>
+                            <option value="Rare">Rare</option>
+                            <option value="Epic">Epic</option>
+                            <option value="Legendary">Legendary</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">ราคา (Token)</label>
+                            <input type="number" name="price" value="100" min="0" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-yellow-500 outline-none transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">สีฉายา</label>
+                            <input type="color" name="title_color" value="#ef4444" class="w-full h-[50px] rounded-xl cursor-pointer border border-gray-200 dark:border-zinc-700 p-1 bg-gray-50 dark:bg-zinc-900">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full mt-4 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-check"></i> บันทึกเข้าร้านค้า
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
-    <div id="inventoryModal" class="modal-backdrop">
-        <div class="modal-content large">
-            <i class="fa-solid fa-xmark close-modal" onclick="closeInventoryModal()"></i>
-            <h2 style="margin-bottom: 25px;"><i class="fa-solid fa-box-open" style="color: #a855f7;"></i> คลังฉายาทั้งหมด</h2>
-            <div class="inventory-list">
+    <!-- Modal คลังฉายาทั้งหมด -->
+    <div id="inventoryModal" class="fixed inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-card w-full max-w-4xl max-h-[85vh] rounded-3xl border border-gray-200 dark:border-primary/30 flex flex-col shadow-2xl overflow-hidden transition-colors">
+            <div class="p-6 border-b border-gray-200 dark:border-red-900/40 flex justify-between items-center bg-gray-50 dark:bg-darker">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-wider flex items-center gap-2"><i class="fa-solid fa-box-open text-yellow-500"></i> คลังฉายาทั้งหมด</h2>
+                <button onclick="closeInventoryModal()" class="text-gray-400 hover:text-primary transition text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 hide-scrollbar">
                 <?php
                 if ($totalTitles > 0):
                     $titlesQuery->data_seek(0);
-                    while ($title = $titlesQuery->fetch_assoc()): ?>
-                        <div class="title-card">
-                            <span class="rarity-badge rarity-<?= $title['rarity'] ?>"><?= $title['rarity'] ?></span>
-                            <h3 style="color: <?= $title['title_color'] ?>; margin-bottom: 5px;"><?= htmlspecialchars($title['title_name']) ?></h3>
-                            <p style="font-size: 13px; color: #fbbf24; margin-bottom: 15px;"><i class="fa-solid fa-coins"></i> <?= number_format($title['price']) ?> Tokens</p>
-                            <div class="actions" style="justify-content: center;">
-                                <button onclick="openEditTitle(<?= htmlspecialchars(json_encode($title)) ?>)" class="action-btn edit"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="confirmDeleteTitle(<?= $title['title_id'] ?>, '<?= htmlspecialchars(addslashes($title['title_name'])) ?>')" class="action-btn delete"><i class="fa-solid fa-trash"></i></button>
+                    while ($title = $titlesQuery->fetch_assoc()):
+                        // Set rarity badge style
+                        $badgeClass = 'bg-gray-500 text-white';
+                        if ($title['rarity'] == 'Rare') $badgeClass = 'bg-blue-500 text-white';
+                        elseif ($title['rarity'] == 'Epic') $badgeClass = 'bg-purple-500 text-white';
+                        elseif ($title['rarity'] == 'Legendary') $badgeClass = 'bg-yellow-500 text-black';
+                ?>
+                        <div class="bg-gray-50 dark:bg-darker border border-gray-200 dark:border-red-900/30 rounded-2xl p-5 text-center transition hover:border-yellow-500/50 group relative">
+                            <span class="<?= $badgeClass ?> text-[10px] uppercase font-bold px-2 py-1 rounded-md mb-3 inline-block shadow-sm tracking-widest"><?= $title['rarity'] ?></span>
+                            <h3 class="text-xl font-bold mb-2 shadow-sm group-hover:scale-105 transition" style="color: <?= $title['title_color'] ?>; text-shadow: 0 0 10px <?= $title['title_color'] ?>80;"><?= htmlspecialchars($title['title_name']) ?></h3>
+                            <p class="text-yellow-600 dark:text-yellow-400 font-bold text-sm mb-4 bg-yellow-50 dark:bg-yellow-500/10 inline-block px-3 py-1 rounded-lg border border-yellow-200 dark:border-yellow-500/20"><i class="fa-solid fa-coins"></i> <?= number_format($title['price']) ?> Tokens</p>
+                            <div class="flex justify-center gap-2 mt-2">
+                                <button onclick='openEditTitle(<?= htmlspecialchars(json_encode($title), ENT_QUOTES, "UTF-8") ?>)' class="flex-1 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-500 hover:text-white dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white py-2 rounded-xl transition text-xs font-bold shadow-sm"><i class="fa-solid fa-pen"></i> แก้ไข</button>
+                                <button onclick="confirmDeleteTitle(<?= $title['title_id'] ?>, '<?= htmlspecialchars(addslashes($title['title_name'])) ?>')" class="flex-1 bg-red-50 text-primary border border-red-200 hover:bg-primary hover:text-white dark:bg-red-500/10 dark:border-red-500/20 dark:text-primary dark:hover:bg-primary dark:hover:text-white py-2 rounded-xl transition text-xs font-bold shadow-sm"><i class="fa-solid fa-trash"></i> ลบ</button>
                             </div>
                         </div>
                     <?php endwhile;
                 else: ?>
-                    <p style="text-align:center; grid-column: 1/-1;">ยังไม่มีฉายาในคลัง</p>
+                    <div class="col-span-full text-center py-10 text-gray-500 dark:text-zinc-500 italic">ยังไม่มีฉายาในคลัง</div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <div id="editTitleModal" class="modal-backdrop">
-        <div class="modal-content">
-            <i class="fa-solid fa-xmark close-modal" onclick="closeEditTitleModal()"></i>
-            <h2 style="margin-bottom: 25px;"><i class="fa-solid fa-pen-to-square" style="color: #38bdf8;"></i> แก้ไขข้อมูลฉายา</h2>
-            <form action="" method="POST">
-                <input type="hidden" name="title_id" id="edit_title_id">
-                <div class="form-group">
-                    <label>ชื่อฉายา</label>
-                    <input type="text" name="title_name" id="edit_title_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>ระดับความหายาก</label>
-                    <select name="rarity" id="edit_rarity" class="form-control">
-                        <option value="Common">Common</option>
-                        <option value="Rare">Rare</option>
-                        <option value="Epic">Epic</option>
-                        <option value="Legendary">Legendary</option>
-                    </select>
-                </div>
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div><label>ราคา (Token)</label><input type="number" name="price" id="edit_price" class="form-control" required></div>
-                    <div><label>สีฉายา</label><input type="color" name="title_color" id="edit_title_color" class="form-control" style="height: 48px; padding: 5px;"></div>
-                </div>
-                <button type="submit" name="update_title" class="add-btn" style="width: 100%; justify-content: center; background: #38bdf8;">
-                    <i class="fa-solid fa-save"></i> อัปเดตข้อมูล
-                </button>
-            </form>
+    <!-- Modal แก้ไขฉายา -->
+    <div id="editTitleModal" class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-card w-full max-w-md rounded-3xl border border-gray-200 dark:border-red-900/50 shadow-2xl overflow-hidden transform transition-all relative">
+            <div class="p-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50 dark:bg-darker">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-blue-500"></i> แก้ไขฉายา</h2>
+                <button onclick="closeEditTitleModal()" class="text-gray-400 hover:text-primary transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form action="" method="POST" class="space-y-4">
+                    <input type="hidden" name="title_id" id="edit_title_id">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">ชื่อฉายา</label>
+                        <input type="text" name="title_name" id="edit_title_name" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">ระดับความหายาก</label>
+                        <select name="rarity" id="edit_rarity" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-blue-500 outline-none transition">
+                            <option value="Common">Common</option>
+                            <option value="Rare">Rare</option>
+                            <option value="Epic">Epic</option>
+                            <option value="Legendary">Legendary</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">ราคา (Token)</label>
+                            <input type="number" name="price" id="edit_price" min="0" class="w-full bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-blue-500 outline-none transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-1">สีฉายา</label>
+                            <input type="color" name="title_color" id="edit_title_color" class="w-full h-[50px] rounded-xl cursor-pointer border border-gray-200 dark:border-zinc-700 p-1 bg-gray-50 dark:bg-zinc-900">
+                        </div>
+                    </div>
+                    <button type="submit" name="update_title" class="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-save"></i> อัปเดตข้อมูล
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
         function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            localStorage.setItem('gymfitt-theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            localStorage.setItem('gymfitt-theme', html.classList.contains('dark') ? 'dark' : 'light');
         }
-        (function() {
-            if (localStorage.getItem('gymfitt-theme') === 'light') document.body.classList.add('light-mode');
-        })();
 
+        // Modal Functions
         function openTitleModal() {
-            document.getElementById('titleModal').style.display = 'flex';
+            document.getElementById('titleModal').classList.remove('hidden');
+            document.getElementById('titleModal').classList.add('flex');
         }
 
         function closeTitleModal() {
-            document.getElementById('titleModal').style.display = 'none';
+            document.getElementById('titleModal').classList.add('hidden');
+            document.getElementById('titleModal').classList.remove('flex');
         }
 
         function openInventoryModal() {
-            document.getElementById('inventoryModal').style.display = 'flex';
+            document.getElementById('inventoryModal').classList.remove('hidden');
+            document.getElementById('inventoryModal').classList.add('flex');
         }
 
         function closeInventoryModal() {
-            document.getElementById('inventoryModal').style.display = 'none';
+            document.getElementById('inventoryModal').classList.add('hidden');
+            document.getElementById('inventoryModal').classList.remove('flex');
         }
 
         function openEditTitle(data) {
@@ -764,26 +504,29 @@ $totalTitles = ($titlesQuery) ? $titlesQuery->num_rows : 0;
             document.getElementById('edit_rarity').value = data.rarity;
             document.getElementById('edit_price').value = data.price;
             document.getElementById('edit_title_color').value = data.title_color;
-            document.getElementById('editTitleModal').style.display = 'flex';
+
+            document.getElementById('editTitleModal').classList.remove('hidden');
+            document.getElementById('editTitleModal').classList.add('flex');
         }
 
         function closeEditTitleModal() {
-            document.getElementById('editTitleModal').style.display = 'none';
+            document.getElementById('editTitleModal').classList.add('hidden');
+            document.getElementById('editTitleModal').classList.remove('flex');
         }
 
+        // Close modal on backdrop click
         window.onclick = function(e) {
-            if (e.target.className === 'modal-backdrop') {
-                closeTitleModal();
-                closeInventoryModal();
-                closeEditTitleModal();
-            }
+            if (e.target.id === 'titleModal') closeTitleModal();
+            if (e.target.id === 'inventoryModal') closeInventoryModal();
+            if (e.target.id === 'editTitleModal') closeEditTitleModal();
         }
 
+        // SweetAlert Configuration
         function getSwalConfig() {
-            const isL = document.body.classList.contains('light-mode');
+            const isDark = document.documentElement.classList.contains('dark');
             return {
-                background: isL ? '#fff' : '#18181b',
-                color: isL ? '#18181b' : '#fafafa',
+                background: isDark ? '#18181b' : '#fff',
+                color: isDark ? '#fafafa' : '#18181b',
                 confirmButtonColor: '#ef4444',
                 customClass: {
                     popup: 'gymfitt-swal-popup'
@@ -837,7 +580,7 @@ $totalTitles = ($titlesQuery) ? $titlesQuery->num_rows : 0;
             Swal.fire({
                 ...getSwalConfig(),
                 title: 'ลบท่าออกกำลังกาย?',
-                text: `ต้องการลบท่า "${name}" ใช่หรือไม่? (ภารกิจที่ใช้ท่านี้อยู่จะได้รับผลกระทบ)`,
+                text: `ต้องการลบท่า "${name}" ใช่หรือไม่? (ภารกิจที่เกี่ยวข้องจะได้รับผลกระทบ)`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'ใช่, ลบเลย',
@@ -847,6 +590,7 @@ $totalTitles = ($titlesQuery) ? $titlesQuery->num_rows : 0;
             });
         }
 
+        // Notification alerts
         <?php if (isset($delete_success) && $delete_success): ?>
             Swal.fire({
                 ...getSwalConfig(),
